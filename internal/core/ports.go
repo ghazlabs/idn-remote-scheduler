@@ -5,6 +5,7 @@ import "context"
 type Storage interface {
 	GetAllMessages(ctx context.Context) ([]Message, error)
 	SaveMessage(ctx context.Context, message Message) error
+	UpdateMessage(ctx context.Context, message Message) error
 }
 
 type Scheduler interface {
