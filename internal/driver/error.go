@@ -40,10 +40,10 @@ func NewBadRequestError(msg string) *Error {
 	}
 }
 
-func NewInvalidAPIKeyError() *Error {
+func NewInvalidCredsError() *Error {
 	return &Error{
 		StatusCode: http.StatusUnauthorized,
-		Err:        "ERR_INVALID_API_KEY",
-		Message:    "Invalid API key",
+		Err:        "ERR_INVALID_CREDENTIALS",
+		Message:    "invalid credentials",
 	}
 }

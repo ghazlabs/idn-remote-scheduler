@@ -1,10 +1,10 @@
 package driver
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
-	"github.com/ghazlabs/idn-remote-scheduler/internal/core"
 	"github.com/go-chi/render"
 )
 
@@ -33,17 +33,7 @@ func NewSuccessResp(data interface{}) *RespBody {
 
 func NewErrorResp(err error) *RespBody {
 	var restErr *Error
-	switch v := err.(type) {
-	case *Error:
-		restErr = v
-	case *core.Error:
-		switch v.ErrCode {
-		case core.ErrCodeBadRequest:
-			restErr = NewBadRequestError(v.Message)
-		default:
-			restErr = NewInternalServerError(v)
-		}
-	default:
+	if !errors.As(err, &restErr) {
 		restErr = NewInternalServerError(err)
 	}
 
