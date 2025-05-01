@@ -80,7 +80,10 @@ Content-Type: application/json
         // scheduled message, should be sent at `scheduled_sending_at`
         {
             "id": "1da2f3e4-5b6c-7d8e-9a0b-c1d2e3f4g5h6",
-            "message": "Job alert for Software Engineer at Invertase...",
+            "content": "Job alert for Software Engineer at Invertase...",
+            "recipient_numbers": [
+              "120363352351961275@g.us"
+            ],
             "scheduled_sending_at": 1735432224,
             "sent_at": null,
             "retried_count": 0,
@@ -92,7 +95,11 @@ Content-Type: application/json
         // successfully sent message, `sent_at` is set
         {
             "id": "2b3c4d5e-6f7g-8h9i-0j1k-l2m3n4o5p6q7",
-            "message": "Job alert for Software Engineer at dev.to...",
+            "content": "Job alert for Software Engineer at dev.to...",
+            "recipient_numbers": [
+              "120363352351961274@g.us",
+              "120363352351961275@g.us"
+            ],
             "scheduled_sending_at": 1735432224,
             "sent_at": 1735432224,
             "retried_count": 0,
@@ -104,7 +111,11 @@ Content-Type: application/json
         // has been retried and expected to be sent
         {
             "id": "2b3c4d5e-6f7g-8h9i-0j1k-l2m3n4o5p6q7",
-            "message": "Job alert for Software Engineer at dev.to...",
+            "content": "Job alert for Software Engineer at dev.to...",
+            "recipient_numbers": [
+              "120363352351961274@g.us",
+              "120363352351961275@g.us"
+            ],
             "scheduled_sending_at": 1735432224,
             "sent_at": null,
             "retried_count": 1,
@@ -116,7 +127,11 @@ Content-Type: application/json
         // failed message, 
         {
             "id": "2b3c4d5e-6f7g-8h9i-0j1k-l2m3n4o5p6q7",
-            "message": "Job alert for Software Engineer at dev.to...",
+            "content": "Job alert for Software Engineer at dev.to...",
+            "recipient_numbers": [
+              "120363352351961274@g.us",
+              "120363352351961275@g.us"
+            ],
             "scheduled_sending_at": 1735432224,
             "sent_at": null,
             "retried_count": 3,
@@ -165,7 +180,7 @@ Content-Type: application/json
         "120363352351961274@g.us",
         "120363352351961275@g.us"
     ],
-    "message": "Job alert for Software Engineer at Invertase...",
+    "content": "Job alert for Software Engineer at Invertase...",
     "scheduled_sending_at": 1735432224
 }
 ```
