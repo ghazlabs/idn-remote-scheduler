@@ -171,7 +171,7 @@ This endpoint is used to send a scheduled message to Whatsapp.
 **Example Call:**
 
 ```json
-POST /vacancies
+POST /messages
 Authorization: Basic admF6bGFicy5jb206cGFzc3dvcmQ=
 Content-Type: application/json
 
