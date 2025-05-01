@@ -8,7 +8,7 @@ For authenticating the call, client is expected to submit basic authentication u
 - [REST API](#rest-api)
   - [Health Check](#health-check)
   - [Get All Messages](#get-all-messages)
-  - [Send Message](#send-message)
+  - [Schedule Message](#schedule-message)
   - [Retry Message](#retry-message)
   - [System Errors](#system-errors)
 
@@ -132,7 +132,7 @@ Content-Type: application/json
 
 [Back to Top](#rest-api)
 
-## Send Message
+## Schedule Message
 
 POST: `/messages`
 
@@ -147,11 +147,11 @@ This endpoint is used to send a scheduled message to Whatsapp.
 
 **Body Payload:**
 
-| Field               | Type            | Required | Description                                            |
-| ------------------- | --------------- | -------- | ------------------------------------------------------ |
-| `recipient_numbers` | Array of string | Yes      | The list of recipient numbers.                         |
-| `message`           | String          | Yes      | The message to be sent.                                |
-| `scheduled_sending_at`        | Number          | Yes      | The Unix timestamp of when the message should be sent. |
+| Field                  | Type            | Required | Description                                            |
+| ---------------------- | --------------- | -------- | ------------------------------------------------------ |
+| `recipient_numbers`    | Array of string | Yes      | The list of recipient numbers.                         |
+| `message`              | String          | Yes      | The message to be sent.                                |
+| `scheduled_sending_at` | Number          | Yes      | The Unix timestamp of when the message should be sent. |
 
 **Example Call:**
 
@@ -199,8 +199,8 @@ This endpoint is used to retry a failed and halted message. The message will be 
 
 **Body Payload:**
 
-| Field        | Type   | Required | Description                                                                                          |
-| ------------ | ------ | -------- | ---------------------------------------------------------------------------------------------------- |
+| Field                  | Type   | Required | Description                                                                                          |
+| ---------------------- | ------ | -------- | ---------------------------------------------------------------------------------------------------- |
 | `scheduled_sending_at` | Number | No       | The Unix timestamp of when the message should be sent. If not provided, it will be sent immediately. |
 
 **Example Call:**
