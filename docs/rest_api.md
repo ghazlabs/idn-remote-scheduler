@@ -6,9 +6,46 @@ For authenticating the call, client is expected to submit basic authentication u
 **Table of contents:**
 
 - [REST API](#rest-api)
+  - [Health Check](#health-check)
   - [Get All Messages](#get-all-messages)
   - [Send Message](#send-message)
   - [Retry Message](#retry-message)
+  - [System Errors](#system-errors)
+
+## Health Check
+
+GET: `/health`
+
+This endpoint is used to check the health of the system. It returns a simple JSON response indicating the system is up and running.
+
+**Headers:**
+
+| Field           | Type   | Required | Description                                           |
+| --------------- | ------ | -------- | ----------------------------------------------------- |
+| `Authorization` | String | Yes      | The Basic Authentication for authenticating the call. |
+| `Content-Type`  | String | Yes      | The only accepted value is `application/json`.        |
+
+**Example Call:**
+
+```json
+GET /health
+Authorization: Basic admF6bGFicy5jb206cGFzc3dvcmQ=
+Content-Type: application/json
+```
+
+**Success Response:**
+
+```json
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+    "ok": true,
+    "ts": 1735432224
+}
+```
+
+[Back to Top](#rest-api)
 
 ## Get All Messages
 
@@ -189,5 +226,75 @@ Content-Type: application/json
   "ts": 1735432224
 }
 ```
+
+[Back to Top](#rest-api)
+
+## System Errors
+
+This section tells the error possible returned by the system.
+
+- Invalid Credentials
+
+  ```json
+  HTTP/1.1 401 Unauthorized
+  Content-Type: application/json
+
+  {
+    "ok": false,
+    "err": "ERR_INVALID_CREDENTIALS",
+    "msg": "invalid credentials",
+    "ts": 1735432224
+  }
+  ```
+
+  This error indicates the submitted authentication credentials are invalid.
+
+- Session Expired
+
+  ```json
+  HTTP/1.1 500 Internal Server Error
+  Content-Type: application/json
+
+  {
+    "ok": false,
+    "err": "ERR_SESSION_EXPIRED",
+    "msg": "session expired",
+    "ts": 1735432224
+  }
+  ```
+
+  This error indicates the session is expired from Whatsapp. Please manually re-authenticate the session. Upon this error, the system will be halted and no messages will be sent until the session is re-authenticated.
+
+- Bad Request
+
+  ```json
+  HTTP/1.1 400 Bad Request
+  Content-Type: application/json
+
+  {
+    "ok": false,
+    "err": "ERR_BAD_REQUEST",
+    "msg": "missing `scheduled_sending_at`",
+    "ts": 1735432224
+  }
+  ```
+
+  This error indicates generic error on the request submitted by client. Please see the value of `msg` for details.
+
+- Internal Server Error
+
+  ```json
+  HTTP/1.1 500 Internal Server Error
+  Content-Type: application/json
+
+  {
+    "ok": false,
+    "err": "ERR_INTERNAL_ERROR",
+    "msg": "unable to connection to notion due: timeout",
+    "ts": 1735432224
+  }
+  ```
+
+  This error indicates generic error on server side. Please see the value of `msg` for details.
 
 [Back to Top](#rest-api)
