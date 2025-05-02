@@ -361,6 +361,7 @@
       function initDatePicker(elementId) {
         flatpickr(`#${elementId}`, {
           enableTime: true,
+          minuteIncrement: 1,
           dateFormat: "Y-m-d H:i",
           time_24hr: true,
           minDate: "today",
