@@ -18,6 +18,7 @@ type API struct {
 
 type APIConfig struct {
 	Service        core.Service `validate:"nonnil"`
+	DefaultNumbers []string     `validate:"nonzero"`
 	ClientUsername string       `validate:"nonzero"`
 	ClientPassword string       `validate:"nonzero"`
 }
@@ -40,7 +41,7 @@ func (a *API) GetHandler() http.Handler {
 	r.Use(BasicAuth(a.ClientUsername, a.ClientPassword))
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
-	r.Get("/health", a.serveHealthCheck)
+	r.Get("/check", a.serveCheckSystem)
 	r.Get("/messages", a.serveGetMessages)
 	r.Post("/messages", a.serveScheduleMessage)
 	r.Post("/messages/{id}/retry", a.serveRetryMessage)
@@ -48,8 +49,11 @@ func (a *API) GetHandler() http.Handler {
 	return r
 }
 
-func (a *API) serveHealthCheck(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("It's working!"))
+func (a *API) serveCheckSystem(w http.ResponseWriter, r *http.Request) {
+	resp := NewSuccessResp(RespCheck{
+		DefaultNumbers: a.DefaultNumbers,
+	})
+	render.Render(w, r, resp)
 }
 
 func (a *API) serveGetMessages(w http.ResponseWriter, r *http.Request) {

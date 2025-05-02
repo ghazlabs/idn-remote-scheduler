@@ -1,22 +1,21 @@
 # REST API
 
-For authenticating the call, client is expected to submit basic authentication using a
- predefined username and password. You can lookup the value of this key from `CLIENT_USERNAME` and `CLIENT_PASSWORD` environment variable.
+For authenticating the call, client is expected to submit basic authentication using a predefined username and password. You can lookup the value of this key from `CLIENT_USERNAME` and `CLIENT_PASSWORD` environment variable.
 
 **Table of contents:**
 
 - [REST API](#rest-api)
-  - [Health Check](#health-check)
+  - [Check](#check)
   - [Get All Messages](#get-all-messages)
   - [Schedule Message](#schedule-message)
   - [Retry Message](#retry-message)
   - [System Errors](#system-errors)
 
-## Health Check
+## Check
 
-GET: `/health`
+GET: `/check`
 
-This endpoint is used to check the health of the system. It returns a simple JSON response indicating the system is up and running.
+This endpoint is used to check initial of the system.
 
 **Headers:**
 
@@ -28,7 +27,7 @@ This endpoint is used to check the health of the system. It returns a simple JSO
 **Example Call:**
 
 ```json
-GET /health
+GET /check
 Authorization: Basic admF6bGFicy5jb206cGFzc3dvcmQ=
 Content-Type: application/json
 ```
@@ -41,6 +40,11 @@ Content-Type: application/json
 
 {
     "ok": true,
+    "data": {
+      "default_numbers": [
+        "120363352351961275@g.us"
+      ]
+    },
     "ts": 1735432224
 }
 ```
