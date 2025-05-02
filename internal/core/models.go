@@ -39,3 +39,8 @@ type ScheduleMessageInput struct {
 type GetAllMessagesInput struct {
 	Status MessageStatus `json:"status"`
 }
+
+type RetryMessageInput struct {
+	ID                 string `json:"id"`
+	ScheduledSendingAt int64  `json:"scheduled_sending_at"`
+}

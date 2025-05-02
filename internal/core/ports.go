@@ -8,6 +8,7 @@ type Storage interface {
 	GetAllMessages(ctx context.Context, message GetAllMessagesInput) ([]Message, error)
 	SaveMessage(ctx context.Context, message Message) error
 	UpdateMessage(ctx context.Context, message Message) error
+	GetMessage(ctx context.Context, id string) (*Message, error)
 }
 
 type Scheduler interface {

@@ -12,7 +12,7 @@ type Service interface {
 	InitializeService(ctx context.Context)
 	GetAllMessages(ctx context.Context, input GetAllMessagesInput) ([]Message, error)
 	SendMessage(ctx context.Context, inputMsg ScheduleMessageInput) error
-	RetryMessage(ctx context.Context, msg Message) error
+	RetryMessage(ctx context.Context, input RetryMessageInput) error
 }
 
 type ServiceConfig struct {
@@ -83,8 +83,16 @@ func (s *service) SendMessage(ctx context.Context, input ScheduleMessageInput) e
 	return nil
 }
 
-func (s *service) RetryMessage(ctx context.Context, msg Message) error {
-	err := s.Storage.UpdateMessage(ctx, msg)
+func (s *service) RetryMessage(ctx context.Context, input RetryMessageInput) error {
+	msg, err := s.Storage.GetMessage(ctx, input.ID)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve message: %w", err)
+	}
+	if msg == nil {
+		return ErrMessageNotFound
+	}
+
+	err = s.Scheduler.RetryMessage(ctx, *msg)
 	if err != nil {
 		return fmt.Errorf("failed to update message: %w", err)
 	}

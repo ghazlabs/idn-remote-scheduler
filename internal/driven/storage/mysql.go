@@ -45,7 +45,9 @@ func (s *MySQLStorage) GetAllMessages(ctx context.Context, input core.GetAllMess
 		reason,
 		created_at,
 		updated_at
-	FROM %s`, tableSchedule)
+	FROM %s
+	ORDER BY created_at DESC
+	`, tableSchedule)
 
 	var args []interface{}
 	var conditions []string
@@ -107,6 +109,60 @@ func (s *MySQLStorage) GetAllMessages(ctx context.Context, input core.GetAllMess
 	}
 
 	return messages, nil
+}
+func (s *MySQLStorage) GetMessage(ctx context.Context, id string) (*core.Message, error) {
+	query := fmt.Sprintf(`SELECT
+		id,
+		content,
+		recipient_numbers,
+		scheduled_sending_at,
+		sent_at,
+		retried_count,
+		status,
+		reason,
+		created_at,
+		updated_at
+	FROM %s WHERE id = ?`, tableSchedule)
+
+	row := s.DB.QueryRowContext(ctx, query, id)
+
+	var msg core.Message
+	var recipientNumbers, createdAt, updatedAt string
+	err := row.Scan(
+		&msg.ID,
+		&msg.Content,
+		&recipientNumbers,
+		&msg.ScheduledSendingAt,
+		&msg.SentAt,
+		&msg.RetriedCount,
+		&msg.Status,
+		&msg.Reason,
+		&createdAt,
+		&updatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to scan row: %w", err)
+	}
+
+	msg.RecipientNumbers = strings.Split(recipientNumbers, ",")
+
+	t, err := time.Parse("2006-01-02 15:04:05", createdAt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse created_at timestamp: %w", err)
+	}
+	msg.CreatedAt = t.Unix()
+
+	t, err = time.Parse("2006-01-02 15:04:05", updatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse updated_at timestamp: %w", err)
+	}
+	msg.UpdatedAt = t.Unix()
+
+	return &msg, nil
 }
 
 func (s *MySQLStorage) SaveMessage(ctx context.Context, message core.Message) error {

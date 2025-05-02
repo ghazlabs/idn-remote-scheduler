@@ -80,7 +80,7 @@ Content-Type: application/json
 
 {
     "ok": true,
-    "messages": [
+    "data": [
         // scheduled message, should be sent at `scheduled_sending_at`
         {
             "id": "1da2f3e4-5b6c-7d8e-9a0b-c1d2e3f4g5h6",

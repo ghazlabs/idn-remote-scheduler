@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/ghazlabs/idn-remote-scheduler/internal/core"
 	"github.com/go-chi/chi/v5"
@@ -136,8 +137,11 @@ func (a *API) serveRetryMessage(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, NewErrorResp(NewBadRequestError(err.Error())))
 		return
 	}
+	if req.ScheduledSendingAt == 0 {
+		req.ScheduledSendingAt = time.Now().Unix()
+	}
 
-	err = a.Service.RetryMessage(r.Context(), core.Message{
+	err = a.Service.RetryMessage(r.Context(), core.RetryMessageInput{
 		ID:                 id,
 		ScheduledSendingAt: req.ScheduledSendingAt,
 	})
