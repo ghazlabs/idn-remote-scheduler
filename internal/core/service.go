@@ -9,6 +9,7 @@ import (
 )
 
 type Service interface {
+	InitializeService(ctx context.Context)
 	GetAllMessages(ctx context.Context, input GetAllMessagesInput) ([]Message, error)
 	SendMessage(ctx context.Context, inputMsg ScheduleMessageInput) error
 	RetryMessage(ctx context.Context, msg Message) error
@@ -32,6 +33,24 @@ func NewService(config ServiceConfig) (Service, error) {
 	return &service{
 		ServiceConfig: config,
 	}, nil
+}
+
+func (s *service) InitializeService(ctx context.Context) {
+	scheduledMessages, err := s.Storage.GetAllMessages(ctx, GetAllMessagesInput{
+		Status: MessageStatusScheduled,
+	})
+	if err != nil {
+		fmt.Printf("failed to retrieve scheduled messages: %v\n", err)
+		return
+	}
+	for _, msg := range scheduledMessages {
+		err := s.Scheduler.ScheduleMessage(ctx, msg)
+		if err != nil {
+			fmt.Printf("failed to schedule message: %v\n", err)
+			continue
+		}
+	}
+	fmt.Println("Service initialized and scheduled messages processed.")
 }
 
 func (s *service) GetAllMessages(ctx context.Context, input GetAllMessagesInput) ([]Message, error) {

@@ -170,13 +170,52 @@
                                 <p>{{ selectedMessage.reason }}</p>
                             </div>
                         </div>
+                        
+                        <!-- Add retry button -->
+                        <div v-if="selectedMessage.status === 'failed'" class="mt-4 border-t pt-4">
+                            <button @click="openRetryModal(selectedMessage.id)" 
+                                class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                                Retry Message
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retry Modal -->
+            <div v-if="showRetryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div class="bg-white rounded-lg p-6 max-w-md w-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold">Schedule Retry</h3>
+                        <button @click="closeRetryModal" class="text-gray-500 hover:text-gray-700">&times;</button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Schedule Retry At (Asia/Jakarta)</label>
+                            <input type="datetime-local" 
+                                v-model="retryScheduleTime"
+                                class="block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        </div>
+                        <div v-if="retryError" class="text-red-600 text-sm">
+                            {{ retryError }}
+                        </div>
+                        <div class="flex justify-end gap-2">
+                            <button @click="closeRetryModal" 
+                                class="px-4 py-2 border rounded-md hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button @click="handleRetry" 
+                                class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                                Schedule Retry
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
+    <script></script>
         const { createApp, ref, onMounted } = Vue
 
         createApp({
@@ -197,6 +236,11 @@
                 const messageContent = ref('')
                 const scheduledTime = ref('')
                 const showDefaultNumbers = ref(false)
+                const retryScheduleTime = ref('')
+
+                const showRetryModal = ref(false)
+                const retryMessageId = ref('')
+                const retryError = ref('')
 
                 const checkAuth = async (credentials) => {
                     try {
@@ -289,20 +333,23 @@
                 }
 
                 const retryMessage = async (id) => {
-                    try {
-                        const response = await fetch(`/messages/${id}/retry`, {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Basic ${localStorage.getItem('credentials')}`,
-                                'Content-Type': 'application/json'
-                            }
+                    const timestamp = Math.floor(new Date(retryScheduleTime.value).getTime() / 1000)
+                    const response = await fetch(`/messages/${id}/retry`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Basic ${localStorage.getItem('credentials')}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            scheduled_sending_at: timestamp
                         })
-                        const data = await response.json()
-                        if (data.ok) {
-                            fetchMessages()
-                        }
-                    } catch (error) {
-                        alert('Failed to retry message')
+                    })
+                    const data = await response.json()
+                    if (data.ok) {
+                        selectedMessage.value = null
+                        fetchMessages()
+                    } else {
+                        throw new Error(data.msg || 'Retry failed')
                     }
                 }
 
@@ -400,6 +447,48 @@
                     selectedMessage.value = null
                 }
 
+                const openRetryModal = (id) => {
+                    retryMessageId.value = id
+                    showRetryModal.value = true
+                    // Set minimum datetime to now
+                    const now = new Date()
+                    now.setMinutes(now.getMinutes() + 1) // Add 1 minute buffer
+                    const minDateTime = now.toISOString().slice(0, 16)
+                    const input = document.querySelector('input[type="datetime-local"]')
+                    if (input) {
+                        input.min = minDateTime
+                    }
+                }
+
+                const closeRetryModal = () => {
+                    showRetryModal.value = false
+                    retryMessageId.value = ''
+                    retryScheduleTime.value = ''
+                    retryError.value = ''
+                }
+
+                const handleRetry = async () => {
+                    if (!retryScheduleTime.value) {
+                        retryError.value = 'Please select a schedule time'
+                        return
+                    }
+
+                    const scheduleTime = new Date(retryScheduleTime.value).getTime()
+                    const now = new Date().getTime()
+
+                    if (scheduleTime <= now) {
+                        retryError.value = 'Schedule time must be in the future'
+                        return
+                    }
+
+                    try {
+                        await retryMessage(retryMessageId.value)
+                        closeRetryModal()
+                    } catch (error) {
+                        retryError.value = 'Failed to retry message'
+                    }
+                }
+
                 return {
                     isLoggedIn,
                     username,
@@ -428,7 +517,13 @@
                     filterDefaultNumbers,
                     selectFirstSuggestion,
                     handleBackspace,
-                    logout
+                    logout,
+                    retryScheduleTime,
+                    showRetryModal,
+                    retryError,
+                    openRetryModal,
+                    closeRetryModal,
+                    handleRetry,
                 }
             }
         }).mount('#app')

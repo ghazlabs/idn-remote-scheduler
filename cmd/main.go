@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -39,6 +40,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create gocron client: %v", err)
 	}
+	gocronClient.Start()
+	defer func() {
+		if err := gocronClient.Shutdown(); err != nil {
+			log.Fatalf("failed to stop gocron client: %v", err)
+		}
+	}()
 
 	mysqlClient, err := sql.Open("mysql", cfg.MysqlDSN)
 	if err != nil {
@@ -68,6 +75,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create service: %v", err)
 	}
+	service.InitializeService(context.Background())
 
 	api, err := driver.NewAPI(driver.APIConfig{
 		Service:            service,
