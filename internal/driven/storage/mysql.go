@@ -33,7 +33,18 @@ func NewMySQLStorage(cfg MySQLStorageConfig) (*MySQLStorage, error) {
 }
 
 func (s *MySQLStorage) GetAllMessages(ctx context.Context, message core.Message) ([]core.Message, error) {
-	query := fmt.Sprintf("SELECT id, message, scheduled_sending_at, sent_at, retried_count, status, reason, created_at, updated_at FROM %s", tableSchedule)
+	query := fmt.Sprintf(`SELECT
+		id,
+		content,
+		recipient_numbers,
+		scheduled_sending_at,
+		sent_at,
+		retried_count,
+		status,
+		reason,
+		created_at,
+		updated_at
+	FROM %s`, tableSchedule)
 
 	var args []interface{}
 	var conditions []string
@@ -81,20 +92,19 @@ func (s *MySQLStorage) GetAllMessages(ctx context.Context, message core.Message)
 }
 
 func (s *MySQLStorage) SaveMessage(ctx context.Context, message core.Message) error {
-	query := fmt.Sprintf("INSERT INTO %s (id, message, scheduled_sending_at, sent_at, retried_count, status, reason, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", tableSchedule)
+	query := fmt.Sprintf(`
+		INSERT INTO %s (id, content, scheduled_sending_at, recipient_numbers, status)
+		VALUES (?, ?, ?, ?, ?)
+		RETURNING id
+	`, tableSchedule)
 
 	_, err := s.DB.ExecContext(ctx, query,
 		message.ID,
 		message.Content,
 		message.ScheduledSendingAt,
-		message.SentAt,
-		message.RetriedCount,
+		message.RecipientNumbers,
 		message.Status,
-		message.Reason,
-		message.CreatedAt,
-		message.UpdatedAt,
 	)
-
 	if err != nil {
 		return fmt.Errorf("failed to insert message: %w", err)
 	}

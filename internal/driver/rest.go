@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"path/filepath"
 
 	"github.com/ghazlabs/idn-remote-scheduler/internal/core"
 	"github.com/go-chi/chi/v5"
@@ -18,10 +19,11 @@ type API struct {
 }
 
 type APIConfig struct {
-	Service        core.Service `validate:"nonnil"`
-	DefaultNumbers []string     `validate:"nonzero"`
-	ClientUsername string       `validate:"nonzero"`
-	ClientPassword string       `validate:"nonzero"`
+	Service            core.Service `validate:"nonnil"`
+	DefaultNumbers     []string     `validate:"nonzero"`
+	ClientUsername     string       `validate:"nonzero"`
+	ClientPassword     string       `validate:"nonzero"`
+	WebClientPublicDir string       `validate:"nonzero"`
 }
 
 func NewAPI(cfg APIConfig) (*API, error) {
@@ -39,15 +41,23 @@ func (a *API) GetHandler() http.Handler {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(BasicAuth(a.ClientUsername, a.ClientPassword))
-	r.Use(render.SetContentType(render.ContentTypeJSON))
 
-	r.Get("/check", a.serveCheckSystem)
-	r.Get("/messages", a.serveGetMessages)
-	r.Post("/messages", a.serveScheduleMessage)
-	r.Post("/messages/{id}/retry", a.serveRetryMessage)
+	r.Get("/", a.serveWebFrontend)
+	r.Group(func(r chi.Router) {
+		r.Use(BasicAuth(a.ClientUsername, a.ClientPassword))
+		r.Use(render.SetContentType(render.ContentTypeJSON))
+
+		r.Get("/check", a.serveCheckSystem)
+		r.Get("/messages", a.serveGetMessages)
+		r.Post("/messages", a.serveScheduleMessage)
+		r.Post("/messages/{id}/retry", a.serveRetryMessage)
+	})
 
 	return r
+}
+
+func (a *API) serveWebFrontend(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, filepath.Join(a.WebClientPublicDir, "index.html"))
 }
 
 func (a *API) serveCheckSystem(w http.ResponseWriter, r *http.Request) {
@@ -82,8 +92,8 @@ func (a *API) serveScheduleMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = a.Service.SendMessage(r.Context(), core.Message{
-		Content:            req.Message,
+	err = a.Service.SendMessage(r.Context(), core.ScheduleMessageInput{
+		Content:            req.Content,
 		RecipientNumbers:   req.RecipientNumbers,
 		ScheduledSendingAt: req.ScheduledSendingAt,
 	})

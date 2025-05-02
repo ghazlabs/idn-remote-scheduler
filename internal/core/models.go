@@ -29,3 +29,9 @@ func (m *Message) String() string {
 	jsonData, _ := json.Marshal(m)
 	return string(jsonData)
 }
+
+type ScheduleMessageInput struct {
+	Content            string   `json:"content"`
+	RecipientNumbers   []string `json:"recipient_numbers"`
+	ScheduledSendingAt int64    `json:"scheduled_sending_at"`
+}

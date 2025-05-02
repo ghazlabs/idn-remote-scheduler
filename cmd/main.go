@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -9,9 +11,12 @@ import (
 	"github.com/ghazlabs/idn-remote-scheduler/internal/core"
 	wa "github.com/ghazlabs/idn-remote-scheduler/internal/driven/publisher"
 	"github.com/ghazlabs/idn-remote-scheduler/internal/driven/scheduler"
+	mysql "github.com/ghazlabs/idn-remote-scheduler/internal/driven/storage"
 	"github.com/ghazlabs/idn-remote-scheduler/internal/driver"
 	"github.com/go-co-op/gocron/v2"
 	"github.com/go-resty/resty/v2"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
@@ -35,37 +40,55 @@ func main() {
 		log.Fatalf("failed to create gocron client: %v", err)
 	}
 
-	_, err = scheduler.NewGoCronScheduler(scheduler.GoCronSchedulerConfig{
+	mysqlClient, err := sql.Open("mysql", cfg.MysqlDSN)
+	if err != nil {
+		log.Fatalf("failed to initialize mysql client: %v", err)
+	}
+
+	storage, err := mysql.NewMySQLStorage(mysql.MySQLStorageConfig{
+		DB: mysqlClient,
+	})
+	if err != nil {
+		log.Fatalf("failed to initialize approval storage: %v", err)
+	}
+
+	gocronScheduler, err := scheduler.NewGoCronScheduler(scheduler.GoCronSchedulerConfig{
 		Client:    gocronClient,
 		Publisher: waPublisher,
-		Storage:   nil,
+		Storage:   storage,
 	})
 	if err != nil {
 		log.Fatalf("failed to create gocron scheduler: %v", err)
 	}
 
-	service, err := core.NewService(core.ServiceConfig{})
+	service, err := core.NewService(core.ServiceConfig{
+		Storage:   storage,
+		Scheduler: gocronScheduler,
+	})
 	if err != nil {
 		log.Fatalf("failed to create service: %v", err)
 	}
 
 	api, err := driver.NewAPI(driver.APIConfig{
-		Service:        service,
-		ClientUsername: cfg.ClientUsername,
-		ClientPassword: cfg.ClientPassword,
+		Service:            service,
+		DefaultNumbers:     cfg.DefaultNumbers,
+		ClientUsername:     cfg.ClientUsername,
+		ClientPassword:     cfg.ClientPassword,
+		WebClientPublicDir: cfg.WebClientPublicDir,
 	})
 	if err != nil {
 		log.Fatalf("failed to create api: %v", err)
 	}
 
 	// initialize server
+	listenAddr := fmt.Sprintf(":%s", cfg.ListenPort)
 	s := &http.Server{
-		Addr:        cfg.Port,
+		Addr:        listenAddr,
 		Handler:     api.GetHandler(),
 		ReadTimeout: time.Second * 30,
 	}
 	// run server
-	log.Printf("server is listening on %v", cfg.Port)
+	log.Printf("server is listening on %v", cfg.ListenPort)
 	err = s.ListenAndServe()
 	if err != nil {
 		log.Fatalf("unable to run server due: %v", err)
@@ -73,13 +96,17 @@ func main() {
 }
 
 type config struct {
-	Port string `env:"PORT,required" envDefault:"9865"`
+	ListenPort string `env:"LISTEN_PORT,required" envDefault:"9865"`
 
-	ClientUsername string `env:"CLIENT_USERNAME,required" envDefault:"admin"`
-	ClientPassword string `env:"CLIENT_PASSWORD,required" envDefault:"admin"`
-	DefaultNumbers string `env:"DEFAULT_NUMBERS,required" envDefault:"120363026176938692@g.us"`
+	MysqlDSN string `env:"MYSQL_DSN,required"`
+
+	ClientUsername string   `env:"CLIENT_USERNAME,required" envDefault:"admin"`
+	ClientPassword string   `env:"CLIENT_PASSWORD,required" envDefault:"admin"`
+	DefaultNumbers []string `env:"DEFAULT_NUMBERS,required" envDefault:"120363026176938692@g.us"`
 
 	WAPublisherApiBaseUrl string `env:"WA_PUBLISHER_API_BASE_URL,required" envDefault:"http://localhost:8080"`
 	WAPublisherUsername   string `env:"WA_PUBLISHER_USERNAME,required" envDefault:"admin"`
 	WAPublisherPassword   string `env:"WA_PUBLISHER_PASSWORD,required" envDefault:"admin"`
+
+	WebClientPublicDir string `env:"WEB_CLIENT_PUBLIC_DIR,required" envDefault:"cmd/web"`
 }

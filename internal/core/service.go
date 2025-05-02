@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"gopkg.in/validator.v2"
 )
 
 type Service interface {
 	GetAllMessages(ctx context.Context, msg Message) ([]Message, error)
-	SendMessage(ctx context.Context, msg Message) error
+	SendMessage(ctx context.Context, inputMsg ScheduleMessageInput) error
 	RetryMessage(ctx context.Context, msg Message) error
 }
 
@@ -42,8 +43,20 @@ func (s *service) GetAllMessages(ctx context.Context, msg Message) ([]Message, e
 	return messages, nil
 }
 
-func (s *service) SendMessage(ctx context.Context, msg Message) error {
+func (s *service) SendMessage(ctx context.Context, input ScheduleMessageInput) error {
+	msg := Message{
+		ID:                 uuid.New().String(),
+		Content:            input.Content,
+		RecipientNumbers:   input.RecipientNumbers,
+		ScheduledSendingAt: input.ScheduledSendingAt,
+		Status:             MessageStatusScheduled,
+	}
 	err := s.Storage.SaveMessage(ctx, msg)
+	if err != nil {
+		return fmt.Errorf("failed to schedule message: %w", err)
+	}
+
+	err = s.Scheduler.ScheduleMessage(ctx, msg)
 	if err != nil {
 		return fmt.Errorf("failed to schedule message: %w", err)
 	}
