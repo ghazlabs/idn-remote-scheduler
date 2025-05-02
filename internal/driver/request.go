@@ -35,19 +35,3 @@ func (r RetryMessageRequest) Validate() error {
 	}
 	return nil
 }
-
-func prepareSendMessageRequest(req SendMessageRequest) (SendMessageRequest, error) {
-	if len(req.RecipientNumbers) == 0 {
-		return req, fmt.Errorf("recipient numbers cannot be empty")
-	}
-
-	if req.Content == "" {
-		return req, fmt.Errorf("content message cannot be empty")
-	}
-
-	if req.ScheduledSendingAt == 0 {
-		return req, fmt.Errorf("schedule sending at cannot be empty")
-	}
-
-	return req, nil
-}
