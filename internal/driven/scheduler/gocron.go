@@ -104,6 +104,7 @@ func (s *GoCronScheduler) sendMessage(ctx context.Context, msg core.Message) {
 			slog.Error("failed to send message", slog.String("message", msg.String()), slog.String("err", err.Error()))
 		} else {
 			// otherwise, retry the message
+			msg.ScheduledSendingAt = time.Now().Add(DefaultRetryDelay).Unix()
 			s.RetryMessage(ctx, msg)
 			return
 		}
@@ -121,7 +122,6 @@ func (s *GoCronScheduler) sendMessage(ctx context.Context, msg core.Message) {
 
 func (s *GoCronScheduler) RetryMessage(ctx context.Context, msg core.Message) error {
 	msg.RetriedCount++
-	msg.ScheduledSendingAt = time.Now().Add(DefaultRetryDelay).Unix()
 	msg.Status = core.MessageStatusScheduled
 	err := s.ScheduleMessage(ctx, msg)
 	if err != nil {

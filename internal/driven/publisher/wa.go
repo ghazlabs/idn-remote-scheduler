@@ -36,7 +36,7 @@ func (n *WaPublisher) Publish(ctx context.Context, msg core.Message) error {
 	for _, recID := range msg.RecipientNumbers {
 		err := n.sendMessage(ctx, recID, msg.Content)
 		if err != nil {
-			return fmt.Errorf("failed to send notification to %s: %w", recID, err)
+			return err
 		}
 	}
 
@@ -49,7 +49,7 @@ func (n *WaPublisher) sendMessage(ctx context.Context, recID string, content str
 	resp, err := n.HttpClient.R().
 		SetContext(ctx).
 		SetBasicAuth(n.Username, n.Password).
-		SetResult(rsp).
+		SetError(&rsp).
 		SetBody(map[string]interface{}{
 			"phone":   recID,
 			"message": content,
