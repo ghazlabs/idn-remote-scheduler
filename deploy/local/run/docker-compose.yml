@@ -1,0 +1,59 @@
+services:
+  mysql:
+    image: bitnami/mysql:8.0
+    healthcheck:
+      test: "mysql --user=root --password=test1234 --execute \"SHOW DATABASES;\""
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    ports:
+      - 8306:3306
+    volumes:
+      - ../../../docs/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - mysql_data:/bitnami/mysql/data
+    environment:
+      - MYSQL_ROOT_PASSWORD=test1234
+      - MYSQL_DATABASE=idnremotescheduler
+
+  whatsapp:
+    image: aldinokemal2104/go-whatsapp-web-multidevice:v4.22.1
+    container_name: whatsapp
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - whatsapp:/app/storages
+    environment:
+      - APP_BASIC_AUTH=admin:admin
+      - APP_PORT=3000
+      - APP_DEBUG=true
+      - APP_OS=Chrome
+      - APP_ACCOUNT_VALIDATION=false
+
+  server:
+    build:
+      context: ../../../
+      dockerfile: ./build/package/Dockerfile
+    depends_on:
+      mysql:
+        condition: service_healthy
+      whatsapp:
+        condition: service_started
+    volumes:
+      - ../../../cmd/web:/web
+    environment:
+      - LISTEN_PORT=9865
+      - MYSQL_DSN=root:test1234@tcp(mysql:3306)/idnremotescheduler?timeout=5s
+      - CLIENT_USERNAME=admin
+      - CLIENT_PASSWORD=admin
+      - DEFAULT_NUMBERS=120363026176938692@g.us
+      - WA_PUBLISHER_API_BASE_URL=http://whatsapp:3000
+      - WA_PUBLISHER_API_KEY=admin
+      - WA_PUBLISHER_API_SECRET=admin
+    ports:
+      - "9865:9865"
+
+volumes:
+  whatsapp:
+  mysql_data:

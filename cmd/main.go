@@ -88,7 +88,7 @@ func main() {
 		ReadTimeout: time.Second * 30,
 	}
 	// run server
-	log.Printf("server is listening on %v", cfg.ListenPort)
+	log.Printf("server is listening on %v", listenAddr)
 	err = s.ListenAndServe()
 	if err != nil {
 		log.Fatalf("unable to run server due: %v", err)
@@ -108,5 +108,5 @@ type config struct {
 	WAPublisherUsername   string `env:"WA_PUBLISHER_USERNAME,required" envDefault:"admin"`
 	WAPublisherPassword   string `env:"WA_PUBLISHER_PASSWORD,required" envDefault:"admin"`
 
-	WebClientPublicDir string `env:"WEB_CLIENT_PUBLIC_DIR,required" envDefault:"cmd/web"`
+	WebClientPublicDir string `env:"WEB_CLIENT_PUBLIC_DIR,required" envDefault:"web"`
 }

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Message Scheduler</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="app" class="min-h-screen">
+        <!-- Login Form -->
+        <div v-if="!isLoggedIn" class="min-h-screen flex items-center justify-center">
+            <div class="bg-white p-8 rounded-lg shadow-md w-96">
+                <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+                <form @submit.prevent="login" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Username</label>
+                        <input type="text" v-model="username" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" v-model="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" required>
+                    </div>
+                    <div v-if="loginError" class="text-red-600 text-sm">{{ loginError }}</div>
+                    <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">Login</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div v-else class="container mx-auto px-4 py-8">
+            <!-- Header with Logout -->
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold">WhatsApp Message Scheduler</h1>
+                <button @click="logout" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
+                    Logout
+                </button>
+            </div>
+
+            <!-- Session Expired Alert -->
+            <div v-if="isSessionExpired" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <strong class="font-bold">Session Expired!</strong>
+                <span class="block sm:inline"> Please re-authenticate the WhatsApp session.</span>
+            </div>
+
+            <!-- Schedule Message Form -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <h2 class="text-xl font-bold mb-4">Schedule New Message</h2>
+                <form @submit.prevent="scheduleMessage" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Recipients</label>
+                        <div class="relative">
+                            <div class="flex gap-2 flex-wrap mt-2 p-2 border rounded-md min-h-[42px]">
+                                <template v-for="number in selectedRecipients" :key="number">
+                                    <div class="bg-blue-100 px-2 py-1 rounded-md flex items-center gap-2">
+                                        <span>{{ number }}</span>
+                                        <button @click="removeRecipient(number)" type="button" class="text-blue-600">&times;</button>
+                                    </div>
+                                </template>
+                                <input type="text" v-model="recipientInput" 
+                                    @input="filterDefaultNumbers"
+                                    @focus="showDefaultNumbers = true"
+                                    @keydown.enter.prevent="addRecipient"
+                                    @keydown.tab.prevent="selectFirstSuggestion"
+                                    @keydown.backspace="handleBackspace"
+                                    @blur="() => setTimeout(() => showDefaultNumbers = false, 200)"
+                                    class="flex-1 min-w-[120px] outline-none border-none p-1">
+                            </div>
+                            <div v-if="showDefaultNumbers && filteredNumbers.length > 0" 
+                                class="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-sm max-h-48 overflow-y-auto">
+                                <div v-for="number in filteredNumbers" :key="number"
+                                    @mousedown.prevent="selectDefaultNumber(number)"
+                                    class="p-2 hover:bg-gray-100 cursor-pointer">
+                                    {{ number }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Message</label>
+                        <textarea v-model="messageContent" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Schedule Date & Time (Asia/Jakarta)</label>
+                        <input type="datetime-local" v-model="scheduledTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" required>
+                    </div>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Schedule Message</button>
+                </form>
+            </div>
+
+            <!-- Messages List -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold mb-4">Scheduled Messages</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Id</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Content</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Recipients</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Schedule</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr v-for="message in messages" :key="message.id">
+                                <td class="px-6 py-4">
+                                    {{ message.id }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <button @click="showMessageDetail(message)" class="text-blue-600 hover:underline">
+                                        {{ truncateText(message.content) }}
+                                    </button>
+                                </td>
+                                <td class="px-6 py-4">{{ message.recipient_numbers.length }} recipients</td>
+                                <td class="px-6 py-4">{{ formatDateTime(message.scheduled_sending_at) }}</td>
+                                <td class="px-6 py-4">
+                                    <span :class="getStatusClass(message.status)">
+                                        {{ message.status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <button v-if="message.status === 'failed'"
+                                        @click="retryMessage(message.id)"
+                                        class="text-blue-600 hover:underline">
+                                        Retry
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Message Detail Modal -->
+            <div v-if="selectedMessage" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                <div class="bg-white rounded-lg p-6 max-w-2xl w-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold">Message Details</h3>
+                        <button @click="selectedMessage = null" class="text-gray-500 hover:text-gray-700">&times;</button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-medium">Content:</h4>
+                            <p class="whitespace-pre-wrap">{{ selectedMessage.content }}</p>
+                        </div>
+                        <div>
+                            <h4 class="font-medium">Recipients:</h4>
+                            <ul class="list-disc list-inside">
+                                <li v-for="number in selectedMessage.recipient_numbers" :key="number">{{ number }}</li>
+                            </ul>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="font-medium">Schedule:</h4>
+                                <p>{{ formatDateTime(selectedMessage.scheduled_sending_at) }}</p>
+                            </div>
+                            <div>
+                                <h4 class="font-medium">Status:</h4>
+                                <p>{{ selectedMessage.status }}</p>
+                            </div>
+                            <div>
+                                <h4 class="font-medium">Retry Count:</h4>
+                                <p>{{ selectedMessage.retried_count }}</p>
+                            </div>
+                            <div v-if="selectedMessage.reason">
+                                <h4 class="font-medium">Failure Reason:</h4>
+                                <p>{{ selectedMessage.reason }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted } = Vue
+
+        createApp({
+            setup() {
+                const isLoggedIn = ref(false)
+                const username = ref('')
+                const password = ref('')
+                const messages = ref([])
+                const defaultNumbers = ref([])
+                const selectedMessage = ref(null)
+                const isSessionExpired = ref(false)
+                const loginError = ref('')
+                const filteredNumbers = ref([])
+
+                // Schedule form
+                const selectedRecipients = ref([])
+                const recipientInput = ref('')
+                const messageContent = ref('')
+                const scheduledTime = ref('')
+                const showDefaultNumbers = ref(false)
+
+                const checkAuth = async (credentials) => {
+                    try {
+                        const response = await fetch('/check', {
+                            headers: {
+                                'Authorization': `Basic ${credentials}`,
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        const data = await response.json()
+                        if (data.ok) {
+                            defaultNumbers.value = data.data.default_numbers
+                            return true
+                        }
+                        return false
+                    } catch (error) {
+                        console.error('Auth check failed:', error)
+                        return false
+                    }
+                }
+
+                const login = async () => {
+                    try {
+                        const credentials = btoa(`${username.value}:${password.value}`)
+                        const response = await fetch('/check', {
+                            headers: {
+                                'Authorization': `Basic ${credentials}`,
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        const data = await response.json()
+                        if (data.ok) {
+                            isLoggedIn.value = true
+                            defaultNumbers.value = data.data.default_numbers
+                            localStorage.setItem('credentials', credentials)
+                            loginError.value = ''
+                            fetchMessages()
+                        } else {
+                            loginError.value = 'Invalid username or password'
+                        }
+                    } catch (error) {
+                        loginError.value = 'Login failed. Please try again.'
+                    }
+                }
+
+                const fetchMessages = async () => {
+                    try {
+                        const response = await fetch('/messages', {
+                            headers: {
+                                'Authorization': `Basic ${localStorage.getItem('credentials')}`,
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        const data = await response.json()
+                        if (data.ok) {
+                            messages.value = data.data
+                            console.log('Fetched messages:', messages.value)
+                            checkSessionStatus()
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch messages:', error)
+                    }
+                }
+
+                const scheduleMessage = async () => {
+                    try {
+                        const timestamp = Math.floor(new Date(scheduledTime.value).getTime() / 1000)
+                        const response = await fetch('/messages', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Basic ${localStorage.getItem('credentials')}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                recipient_numbers: selectedRecipients.value,
+                                content: messageContent.value,
+                                scheduled_sending_at: timestamp
+                            })
+                        })
+                        const data = await response.json()
+                        if (data.ok) {
+                            selectedRecipients.value = []
+                            messageContent.value = ''
+                            scheduledTime.value = ''
+                            fetchMessages()
+                        }
+                    } catch (error) {
+                        alert('Failed to schedule message')
+                    }
+                }
+
+                const retryMessage = async (id) => {
+                    try {
+                        const response = await fetch(`/messages/${id}/retry`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Basic ${localStorage.getItem('credentials')}`,
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        const data = await response.json()
+                        if (data.ok) {
+                            fetchMessages()
+                        }
+                    } catch (error) {
+                        alert('Failed to retry message')
+                    }
+                }
+
+                const checkSessionStatus = () => {
+                    isSessionExpired.value = messages.value.some(m => 
+                        m.status === 'failed' && m.reason === 'session expired'
+                    )
+                }
+
+                const showMessageDetail = (message) => {
+                    selectedMessage.value = message
+                }
+
+                const truncateText = (text, length = 50) => {
+                    return text.length > length ? text.substring(0, length) + '...' : text
+                }
+
+                const formatDateTime = (timestamp) => {
+                    return new Date(timestamp * 1000).toLocaleString('en-ID', {
+                        timeZone: 'Asia/Jakarta'
+                    })
+                }
+
+                const getStatusClass = (status) => {
+                    const classes = {
+                        scheduled: 'text-yellow-600',
+                        sent: 'text-green-600',
+                        failed: 'text-red-600'
+                    }
+                    return classes[status] || ''
+                }
+
+                const addRecipient = () => {
+                    if (recipientInput.value && !selectedRecipients.value.includes(recipientInput.value)) {
+                        selectedRecipients.value.push(recipientInput.value)
+                        recipientInput.value = ''
+                    }
+                }
+
+                const removeRecipient = (number) => {
+                    selectedRecipients.value = selectedRecipients.value.filter(n => n !== number)
+                }
+
+                const filterDefaultNumbers = () => {
+                    if (!recipientInput.value) {
+                        filteredNumbers.value = defaultNumbers.value
+                        return
+                    }
+                    filteredNumbers.value = defaultNumbers.value.filter(number =>
+                        number.toLowerCase().includes(recipientInput.value.toLowerCase())
+                    )
+                }
+
+                const selectFirstSuggestion = () => {
+                    if (filteredNumbers.value.length > 0) {
+                        selectDefaultNumber(filteredNumbers.value[0])
+                    }
+                }
+
+                const handleBackspace = (e) => {
+                    if (recipientInput.value === '' && selectedRecipients.value.length > 0 && e.key === 'Backspace') {
+                        selectedRecipients.value.pop()
+                    }
+                }
+
+                onMounted(async () => {
+                    const credentials = localStorage.getItem('credentials')
+                    if (credentials) {
+                        const isValid = await checkAuth(credentials)
+                        if (isValid) {
+                            isLoggedIn.value = true
+                            fetchMessages()
+                        } else {
+                            localStorage.removeItem('credentials')
+                        }
+                    }
+                })
+
+                const selectDefaultNumber = (number) => {
+                    if (!selectedRecipients.value.includes(number)) {
+                        selectedRecipients.value.push(number)
+                    }
+                    recipientInput.value = ''
+                    showDefaultNumbers.value = false
+                    filterDefaultNumbers()
+                }
+
+                const logout = () => {
+                    localStorage.removeItem('credentials')
+                    isLoggedIn.value = false
+                    username.value = ''
+                    password.value = ''
+                    messages.value = []
+                    defaultNumbers.value = []
+                    selectedMessage.value = null
+                }
+
+                return {
+                    isLoggedIn,
+                    username,
+                    password,
+                    messages,
+                    defaultNumbers,
+                    selectedMessage,
+                    isSessionExpired,
+                    selectedRecipients,
+                    recipientInput,
+                    messageContent,
+                    scheduledTime,
+                    showDefaultNumbers,
+                    login,
+                    scheduleMessage,
+                    retryMessage,
+                    showMessageDetail,
+                    truncateText,
+                    formatDateTime,
+                    getStatusClass,
+                    addRecipient,
+                    removeRecipient,
+                    selectDefaultNumber,
+                    loginError,
+                    filteredNumbers,
+                    filterDefaultNumbers,
+                    selectFirstSuggestion,
+                    handleBackspace,
+                    logout
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
