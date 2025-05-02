@@ -62,7 +62,7 @@ func (s *GoCronScheduler) ScheduleMessage(ctx context.Context, msg core.Message)
 	}
 
 	// Check if the scheduled time is within default range (consider as now)
-	isNow := scheduledTime.Before(now) || now.Add(DefaultTolerateLateMessage).After(scheduledTime)
+	isNow := scheduledTime.Unix() <= now.Unix()
 
 	var option gocron.OneTimeJobStartAtOption
 	if isNow {
