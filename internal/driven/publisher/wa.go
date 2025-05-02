@@ -45,9 +45,11 @@ func (n *WaPublisher) Publish(ctx context.Context, msg core.Message) error {
 
 func (n *WaPublisher) sendMessage(ctx context.Context, recID string, content string) error {
 	// send notification to whatsapp
+	var rsp RespSendMessage
 	resp, err := n.HttpClient.R().
 		SetContext(ctx).
 		SetBasicAuth(n.Username, n.Password).
+		SetResult(rsp).
 		SetBody(map[string]interface{}{
 			"phone":   recID,
 			"message": content,
@@ -57,6 +59,10 @@ func (n *WaPublisher) sendMessage(ctx context.Context, recID string, content str
 		return fmt.Errorf("unable to make http request: %w", err)
 	}
 	if resp.IsError() {
+		if rsp.IsSessionExpired() {
+			return core.ErrSessionExpired
+		}
+
 		return fmt.Errorf("failed to send notification: %s", resp.String())
 	}
 
