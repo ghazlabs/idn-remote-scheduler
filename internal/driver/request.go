@@ -12,7 +12,7 @@ type GetAllMessageRequest struct {
 
 type SendMessageRequest struct {
 	RecipientNumbers   []string `json:"recipient_numbers"`
-	Message            string   `json:"message"`
+	Content            string   `json:"content"`
 	ScheduledSendingAt int64    `json:"scheduled_sending_at"`
 }
 
@@ -41,8 +41,8 @@ func prepareSendMessageRequest(req SendMessageRequest) (SendMessageRequest, erro
 		return req, fmt.Errorf("recipient numbers cannot be empty")
 	}
 
-	if req.Message == "" {
-		return req, fmt.Errorf("message cannot be empty")
+	if req.Content == "" {
+		return req, fmt.Errorf("content cannot be empty")
 	}
 
 	if req.ScheduledSendingAt == 0 {

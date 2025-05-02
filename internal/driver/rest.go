@@ -58,12 +58,12 @@ func (a *API) serveCheckSystem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) serveGetMessages(w http.ResponseWriter, r *http.Request) {
-	var status *string
+	var messageStatus core.MessageStatus
 	if raw := r.URL.Query().Get("status"); raw != "" {
-		status = &raw
+		messageStatus = core.MessageStatus(raw)
 	}
 	messages, err := a.Service.GetAllMessages(r.Context(), core.Message{
-		Status: core.MessageStatus(*status),
+		Status: messageStatus,
 	})
 	if err != nil {
 		render.Render(w, r, NewErrorResp(err))
@@ -82,8 +82,14 @@ func (a *API) serveScheduleMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	req, err = prepareSendMessageRequest(req)
+	if err != nil {
+		render.Render(w, r, NewErrorResp(NewBadRequestError(err.Error())))
+		return
+	}
+
 	err = a.Service.SendMessage(r.Context(), core.Message{
-		Content:            req.Message,
+		Content:            req.Content,
 		RecipientNumbers:   req.RecipientNumbers,
 		ScheduledSendingAt: req.ScheduledSendingAt,
 	})
