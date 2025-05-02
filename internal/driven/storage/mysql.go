@@ -45,9 +45,7 @@ func (s *MySQLStorage) GetAllMessages(ctx context.Context, input core.GetAllMess
 		reason,
 		created_at,
 		updated_at
-	FROM %s
-	ORDER BY created_at DESC
-	`, tableSchedule)
+	FROM %s`, tableSchedule)
 
 	var args []interface{}
 	var conditions []string
@@ -60,6 +58,8 @@ func (s *MySQLStorage) GetAllMessages(ctx context.Context, input core.GetAllMess
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
+
+	query += " ORDER BY created_at DESC"
 
 	rows, err := s.DB.QueryContext(ctx, query, args...)
 	if err != nil {
