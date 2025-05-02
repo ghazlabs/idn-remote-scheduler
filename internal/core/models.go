@@ -35,3 +35,7 @@ type ScheduleMessageInput struct {
 	RecipientNumbers   []string `json:"recipient_numbers"`
 	ScheduledSendingAt int64    `json:"scheduled_sending_at"`
 }
+
+type GetAllMessagesInput struct {
+	Status MessageStatus `json:"status"`
+}

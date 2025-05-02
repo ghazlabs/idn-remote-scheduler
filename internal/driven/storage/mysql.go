@@ -32,7 +32,7 @@ func NewMySQLStorage(cfg MySQLStorageConfig) (*MySQLStorage, error) {
 	}, nil
 }
 
-func (s *MySQLStorage) GetAllMessages(ctx context.Context, message core.Message) ([]core.Message, error) {
+func (s *MySQLStorage) GetAllMessages(ctx context.Context, input core.GetAllMessagesInput) ([]core.Message, error) {
 	query := fmt.Sprintf(`SELECT
 		id,
 		content,
@@ -49,9 +49,9 @@ func (s *MySQLStorage) GetAllMessages(ctx context.Context, message core.Message)
 	var args []interface{}
 	var conditions []string
 
-	if message.Status != "" {
+	if input.Status != "" {
 		conditions = append(conditions, "status = ?")
-		args = append(args, message.Status)
+		args = append(args, input.Status)
 	}
 
 	if len(conditions) > 0 {

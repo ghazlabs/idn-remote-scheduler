@@ -9,7 +9,7 @@ import (
 )
 
 type Service interface {
-	GetAllMessages(ctx context.Context, msg Message) ([]Message, error)
+	GetAllMessages(ctx context.Context, input GetAllMessagesInput) ([]Message, error)
 	SendMessage(ctx context.Context, inputMsg ScheduleMessageInput) error
 	RetryMessage(ctx context.Context, msg Message) error
 }
@@ -34,8 +34,8 @@ func NewService(config ServiceConfig) (Service, error) {
 	}, nil
 }
 
-func (s *service) GetAllMessages(ctx context.Context, msg Message) ([]Message, error) {
-	messages, err := s.Storage.GetAllMessages(ctx, msg)
+func (s *service) GetAllMessages(ctx context.Context, input GetAllMessagesInput) ([]Message, error) {
+	messages, err := s.Storage.GetAllMessages(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve messages: %w", err)
 	}
