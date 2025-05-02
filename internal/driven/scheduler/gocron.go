@@ -93,13 +93,13 @@ func (s *GoCronScheduler) sendMessage(ctx context.Context, msg core.Message) {
 		// or if the error is session expired
 		// mark the message as failed
 		if (msg.RetriedCount >= DefaultMaxRetries) || (err == core.ErrSessionExpired) {
+			msg.Status = core.MessageStatusFailed
+
 			reason := fmt.Sprintf("failed to send message after %d retries: %v", DefaultMaxRetries, err)
 			if err == core.ErrSessionExpired {
 				reason = "session expired"
 			}
-
 			msg.Reason = &reason
-			msg.Status = core.MessageStatusFailed
 
 			slog.Error("failed to send message", slog.String("message", msg.String()), slog.String("err", err.Error()))
 		} else {

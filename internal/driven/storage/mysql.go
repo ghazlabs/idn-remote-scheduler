@@ -112,7 +112,16 @@ func (s *MySQLStorage) SaveMessage(ctx context.Context, message core.Message) er
 }
 
 func (s *MySQLStorage) UpdateMessage(ctx context.Context, message core.Message) error {
-	query := fmt.Sprintf("UPDATE %s SET message = ?, scheduled_sending_at = ?, sent_at = ?, retried_count = ?, status = ?, reason = ?, updated_at = ? WHERE id = ?", tableSchedule)
+	query := fmt.Sprintf(`
+		UPDATE %s
+			SET content = ?,
+				scheduled_sending_at = ?,
+				sent_at = ?,
+				retried_count = ?,
+				status = ?,
+				reason = ?
+		WHERE id = ?
+	`, tableSchedule)
 
 	_, err := s.DB.ExecContext(ctx, query,
 		message.Content,
@@ -121,7 +130,6 @@ func (s *MySQLStorage) UpdateMessage(ctx context.Context, message core.Message) 
 		message.RetriedCount,
 		message.Status,
 		message.Reason,
-		message.UpdatedAt,
 		message.ID,
 	)
 
