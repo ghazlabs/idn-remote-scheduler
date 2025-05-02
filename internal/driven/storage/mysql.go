@@ -32,15 +32,15 @@ func NewMySQLStorage(cfg MySQLStorageConfig) (*MySQLStorage, error) {
 	}, nil
 }
 
-func (s *MySQLStorage) GetAllMessages(ctx context.Context, req core.GetAllMessageRequest) ([]core.Message, error) {
+func (s *MySQLStorage) GetAllMessages(ctx context.Context, message core.Message) ([]core.Message, error) {
 	query := fmt.Sprintf("SELECT id, message, scheduled_sending_at, sent_at, retried_count, status, reason, created_at, updated_at FROM %s", tableSchedule)
 
 	var args []interface{}
 	var conditions []string
 
-	if req.Status != nil {
+	if message.Status != "" {
 		conditions = append(conditions, "status = ?")
-		args = append(args, *req.Status)
+		args = append(args, message.Status)
 	}
 
 	if len(conditions) > 0 {
@@ -80,28 +80,43 @@ func (s *MySQLStorage) GetAllMessages(ctx context.Context, req core.GetAllMessag
 	return messages, nil
 }
 
-func (s *MySQLStorage) SaveMessage(ctx context.Context, msg core.Message) error {
-	query := `
-		INSERT INTO messages (
-			id, message, scheduled_sending_at, sent_at,
-			retried_count, status, reason, created_at, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`
+func (s *MySQLStorage) SaveMessage(ctx context.Context, message core.Message) error {
+	query := fmt.Sprintf("INSERT INTO %s (id, message, scheduled_sending_at, sent_at, retried_count, status, reason, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", tableSchedule)
 
 	_, err := s.DB.ExecContext(ctx, query,
-		msg.ID,
-		msg.Content,
-		msg.ScheduledSendingAt,
-		msg.SentAt,
-		msg.RetriedCount,
-		msg.Status,
-		msg.Reason,
-		msg.CreatedAt,
-		msg.UpdatedAt,
+		message.ID,
+		message.Content,
+		message.ScheduledSendingAt,
+		message.SentAt,
+		message.RetriedCount,
+		message.Status,
+		message.Reason,
+		message.CreatedAt,
+		message.UpdatedAt,
 	)
 
 	if err != nil {
 		return fmt.Errorf("failed to insert message: %w", err)
+	}
+	return nil
+}
+
+func (s *MySQLStorage) UpdateMessage(ctx context.Context, message core.Message) error {
+	query := fmt.Sprintf("UPDATE %s SET message = ?, scheduled_sending_at = ?, sent_at = ?, retried_count = ?, status = ?, reason = ?, updated_at = ? WHERE id = ?", tableSchedule)
+
+	_, err := s.DB.ExecContext(ctx, query,
+		message.Content,
+		message.ScheduledSendingAt,
+		message.SentAt,
+		message.RetriedCount,
+		message.Status,
+		message.Reason,
+		message.UpdatedAt,
+		message.ID,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to update message: %w", err)
 	}
 	return nil
 }

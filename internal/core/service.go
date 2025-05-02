@@ -8,13 +8,14 @@ import (
 )
 
 type Service interface {
-	GetAllMessages(ctx context.Context, req GetAllMessageRequest) ([]Message, error)
-	SendMessage(ctx context.Context, req SendMessageRequest) error
-	RetryMessage(ctx context.Context, req RetryMessageRequest) error
+	GetAllMessages(ctx context.Context, msg Message) ([]Message, error)
+	SendMessage(ctx context.Context, msg Message) error
+	RetryMessage(ctx context.Context, msg Message) error
 }
 
 type ServiceConfig struct {
-	Storage Storage `validate:"nonnil"`
+	Storage   Storage   `validate:"nonnil"`
+	Scheduler Scheduler `validate:"nonnil"`
 }
 
 type service struct {
@@ -32,8 +33,8 @@ func NewService(config ServiceConfig) (Service, error) {
 	}, nil
 }
 
-func (s *service) GetAllMessages(ctx context.Context, req GetAllMessageRequest) ([]Message, error) {
-	messages, err := s.Storage.GetAllMessages(ctx, req)
+func (s *service) GetAllMessages(ctx context.Context, msg Message) ([]Message, error) {
+	messages, err := s.Storage.GetAllMessages(ctx, msg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve messages: %w", err)
 	}
@@ -41,10 +42,20 @@ func (s *service) GetAllMessages(ctx context.Context, req GetAllMessageRequest) 
 	return messages, nil
 }
 
-func (s *service) SendMessage(ctx context.Context, req SendMessageRequest) error {
+func (s *service) SendMessage(ctx context.Context, msg Message) error {
+	err := s.Storage.SaveMessage(ctx, msg)
+	if err != nil {
+		return fmt.Errorf("failed to schedule message: %w", err)
+	}
+
 	return nil
 }
 
-func (s *service) RetryMessage(ctx context.Context, req RetryMessageRequest) error {
+func (s *service) RetryMessage(ctx context.Context, msg Message) error {
+	err := s.Storage.UpdateMessage(ctx, msg)
+	if err != nil {
+		return fmt.Errorf("failed to update message: %w", err)
+	}
+
 	return nil
 }

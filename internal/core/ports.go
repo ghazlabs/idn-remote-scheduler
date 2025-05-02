@@ -5,7 +5,7 @@ import (
 )
 
 type Storage interface {
-	GetAllMessages(ctx context.Context, req GetAllMessageRequest) ([]Message, error)
+	GetAllMessages(ctx context.Context, message Message) ([]Message, error)
 	SaveMessage(ctx context.Context, message Message) error
 	UpdateMessage(ctx context.Context, message Message) error
 }

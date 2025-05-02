@@ -1,6 +1,8 @@
 package core
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type MessageStatus string
 
@@ -26,18 +28,4 @@ type Message struct {
 func (m *Message) String() string {
 	jsonData, _ := json.Marshal(m)
 	return string(jsonData)
-}
-
-type GetAllMessageRequest struct {
-	Status *string
-}
-
-type SendMessageRequest struct {
-	RecipientNumbers   []string `json:"recipient_numbers"`
-	Message            string   `json:"message"`
-	ScheduledSendingAt int64    `json:"scheduled_sending_at"`
-}
-
-type RetryMessageRequest struct {
-	ScheduledSendingAt int64 `json:"scheduled_sending_at"`
 }
