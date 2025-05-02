@@ -98,7 +98,7 @@ func main() {
 type config struct {
 	ListenPort string `env:"LISTEN_PORT,required" envDefault:"9865"`
 
-	MysqlDSN string `env:"MYSQL_DSN,required"`
+	MysqlDSN string `env:"MYSQL_DSN,required"  envDefault:"root:test1234@tcp(mysql:3306)/idnremotescheduler?timeout=5s"`
 
 	ClientUsername string   `env:"CLIENT_USERNAME,required" envDefault:"admin"`
 	ClientPassword string   `env:"CLIENT_PASSWORD,required" envDefault:"admin"`
