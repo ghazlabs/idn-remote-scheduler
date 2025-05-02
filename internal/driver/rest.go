@@ -58,10 +58,10 @@ func (a *API) serveCheckSystem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) serveGetMessages(w http.ResponseWriter, r *http.Request) {
-  var status *string
-  if raw := r.URL.Query().Get("status"); raw != "" {
-    status = &raw
-  }
+	var status *string
+	if raw := r.URL.Query().Get("status"); raw != "" {
+		status = &raw
+	}
 
 	messages, err := a.Service.GetAllMessages(r.Context(), core.GetAllMessageRequest{
 		Status: status,
