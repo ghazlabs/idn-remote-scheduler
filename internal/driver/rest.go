@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -57,7 +58,13 @@ func (a *API) serveCheckSystem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) serveGetMessages(w http.ResponseWriter, r *http.Request) {
-	messages, err := a.Service.GetAllMessages(r.Context())
+	var status *string
+	if raw := r.URL.Query().Get("status"); raw != "" {
+		status = &raw
+	}
+	messages, err := a.Service.GetAllMessages(r.Context(), core.Message{
+		Status: core.MessageStatus(*status),
+	})
 	if err != nil {
 		render.Render(w, r, NewErrorResp(err))
 		return
@@ -68,11 +75,50 @@ func (a *API) serveGetMessages(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) serveScheduleMessage(w http.ResponseWriter, r *http.Request) {
+	var req SendMessageRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		render.Render(w, r, NewErrorResp(NewBadRequestError(err.Error())))
+		return
+	}
+
+	err = a.Service.SendMessage(r.Context(), core.Message{
+		Content:            req.Message,
+		RecipientNumbers:   req.RecipientNumbers,
+		ScheduledSendingAt: req.ScheduledSendingAt,
+	})
+	if err != nil {
+		render.Render(w, r, NewErrorResp(err))
+		return
+	}
+
 	resp := NewSuccessResp(nil)
 	render.Render(w, r, resp)
 }
 
 func (a *API) serveRetryMessage(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		render.Render(w, r, NewErrorResp(NewBadRequestError("id is required")))
+		return
+	}
+
+	var req RetryMessageRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		render.Render(w, r, NewErrorResp(NewBadRequestError(err.Error())))
+		return
+	}
+
+	err = a.Service.RetryMessage(r.Context(), core.Message{
+		ID:                 id,
+		ScheduledSendingAt: req.ScheduledSendingAt,
+	})
+	if err != nil {
+		render.Render(w, r, NewErrorResp(err))
+		return
+	}
+
 	resp := NewSuccessResp(nil)
 	render.Render(w, r, resp)
 }
