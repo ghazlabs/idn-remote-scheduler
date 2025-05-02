@@ -19,5 +19,6 @@ require (
 
 require (
 	github.com/ajg/form v1.5.1 // indirect
+	github.com/caarlos0/env/v11 v11.3.1
 	github.com/go-resty/resty/v2 v2.16.5
 )
