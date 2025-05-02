@@ -68,10 +68,11 @@ func (s *MySQLStorage) GetAllMessages(ctx context.Context, input core.GetAllMess
 	messages := make([]core.Message, 0)
 	for rows.Next() {
 		var msg core.Message
-		var createdAt, updatedAt string
+		var recipientNumbers, createdAt, updatedAt string
 		err := rows.Scan(
 			&msg.ID,
 			&msg.Content,
+			&recipientNumbers,
 			&msg.ScheduledSendingAt,
 			&msg.SentAt,
 			&msg.RetriedCount,
@@ -83,6 +84,8 @@ func (s *MySQLStorage) GetAllMessages(ctx context.Context, input core.GetAllMess
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
+
+		msg.RecipientNumbers = strings.Split(recipientNumbers, ",")
 
 		t, err := time.Parse("2006-01-02 15:04:05", createdAt)
 		if err != nil {
@@ -110,13 +113,13 @@ func (s *MySQLStorage) SaveMessage(ctx context.Context, message core.Message) er
 	query := fmt.Sprintf(`
 		INSERT INTO %s (id, content, scheduled_sending_at, recipient_numbers, status)
 		VALUES (?, ?, ?, ?, ?)
-		RETURNING id
 	`, tableSchedule)
 
 	_, err := s.DB.ExecContext(ctx, query,
+		message.ID,
 		message.Content,
 		message.ScheduledSendingAt,
-		message.RecipientNumbers,
+		strings.Join(message.RecipientNumbers, ","),
 		message.Status,
 	)
 	if err != nil {
@@ -147,39 +150,6 @@ func (s *MySQLStorage) UpdateMessage(ctx context.Context, message core.Message) 
 		message.ID,
 	)
 
-	// if message.Content != "" {
-	// 	setClauses = append(setClauses, "message = ?")
-	// 	args = append(args, message.Content)
-	// }
-	// if message.ScheduledSendingAt != 0 {
-	// 	setClauses = append(setClauses, "scheduled_sending_at = ?")
-	// 	args = append(args, message.ScheduledSendingAt)
-	// }
-	// if message.SentAt != nil && *message.SentAt != 0 {
-	// 	setClauses = append(setClauses, "sent_at = ?")
-	// 	args = append(args, message.SentAt)
-	// }
-	// if message.RetriedCount != 0 {
-	// 	setClauses = append(setClauses, "retried_count = ?")
-	// 	args = append(args, message.RetriedCount)
-	// }
-	// if message.Status != "" {
-	// 	setClauses = append(setClauses, "status = ?")
-	// 	args = append(args, message.Status)
-	// }
-	// if message.Reason != nil {
-	// 	setClauses = append(setClauses, "reason = ?")
-	// 	args = append(args, message.Reason)
-	// }
-
-	// if len(setClauses) == 0 {
-	// 	return fmt.Errorf("no fields to update")
-	// }
-
-	// query := fmt.Sprintf("UPDATE %s SET %s WHERE id = ?", tableSchedule, strings.Join(setClauses, ", "))
-	// args = append(args, message.ID)
-
-	_, err := s.DB.ExecContext(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("failed to update message: %w", err)
 	}
