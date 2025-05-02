@@ -1,6 +1,8 @@
 package core
 
-import "context"
+import (
+	"context"
+)
 
 type Storage interface {
 	GetAllMessages(ctx context.Context) ([]Message, error)
@@ -10,5 +12,5 @@ type Storage interface {
 
 type Scheduler interface {
 	ScheduleMessage(ctx context.Context, message Message) error
-	RetryMessage(ctx context.Context, id string) error
+	RetryMessage(ctx context.Context, msg Message) error
 }

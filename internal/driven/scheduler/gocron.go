@@ -16,6 +16,8 @@ const (
 	DefaultMaxRetries = 3
 	// DefaultRetryDelay is the default delay between retries
 	DefaultRetryDelay = 30 * time.Second
+	// DefaultTolerateLateMessage is the default range for tolerating late messages
+	DefaultTolerateLateMessage = 1 * time.Minute
 )
 
 type GoCronScheduler struct {
@@ -39,14 +41,34 @@ func NewGoCronScheduler(cfg GoCronSchedulerConfig) (*GoCronScheduler, error) {
 	}, nil
 }
 
-func (s *GoCronScheduler) ScheduleMessage(ctx context.Context, msg core.Message, at int64) error {
-	isNow := time.Now().Unix() >= at
+func (s *GoCronScheduler) ScheduleMessage(ctx context.Context, msg core.Message) error {
+	scheduledTime := time.Unix(msg.ScheduledSendingAt, 0)
+	now := time.Now()
+
+	// Check if the scheduled time is in the past
+	if scheduledTime.Before(now) && scheduledTime.Add(DefaultTolerateLateMessage).Before(now) {
+		// If scheduled time is in the past and outside the default range, mark as failed
+		reason := "late scheduling message"
+		msg.Reason = &reason
+		msg.Status = core.MessageStatusFailed
+
+		err := s.Storage.UpdateMessage(ctx, msg)
+		if err != nil {
+			return fmt.Errorf("failed to update message status to failed: %w", err)
+		}
+
+		slog.Error("message scheduled in the past", slog.String("message", msg.String()))
+		return nil
+	}
+
+	// Check if the scheduled time is within default range (consider as now)
+	isNow := scheduledTime.Before(now) || now.Add(DefaultTolerateLateMessage).After(scheduledTime)
 
 	var option gocron.OneTimeJobStartAtOption
 	if isNow {
 		option = gocron.OneTimeJobStartImmediately()
 	} else {
-		option = gocron.OneTimeJobStartDateTime(time.Unix(at, 0))
+		option = gocron.OneTimeJobStartDateTime(scheduledTime)
 	}
 
 	// schedule message
@@ -72,13 +94,17 @@ func (s *GoCronScheduler) sendMessage(ctx context.Context, msg core.Message) {
 		// mark the message as failed
 		if (msg.RetriedCount >= DefaultMaxRetries) || (err == core.ErrSessionExpired) {
 			reason := fmt.Sprintf("failed to send message after %d retries: %v", DefaultMaxRetries, err)
+			if err == core.ErrSessionExpired {
+				reason = "session expired"
+			}
+
 			msg.Reason = &reason
 			msg.Status = core.MessageStatusFailed
 
 			slog.Error("failed to send message", slog.String("message", msg.String()), slog.String("err", err.Error()))
 		} else {
 			// otherwise, retry the message
-			s.retryMessage(ctx, msg)
+			s.RetryMessage(ctx, msg)
 			return
 		}
 	} else {
@@ -93,16 +119,15 @@ func (s *GoCronScheduler) sendMessage(ctx context.Context, msg core.Message) {
 	}
 }
 
-func (s *GoCronScheduler) retryMessage(ctx context.Context, msg core.Message) error {
-	scheduleTime := time.Now().Add(DefaultRetryDelay).Unix()
-	err := s.ScheduleMessage(ctx, msg, scheduleTime)
+func (s *GoCronScheduler) RetryMessage(ctx context.Context, msg core.Message) error {
+	msg.RetriedCount++
+	msg.ScheduledSendingAt = time.Now().Add(DefaultRetryDelay).Unix()
+	msg.Status = core.MessageStatusScheduled
+	err := s.ScheduleMessage(ctx, msg)
 	if err != nil {
 		return fmt.Errorf("failed to retry message: %w", err)
 	}
 
-	msg.RetriedCount++
-	msg.ScheduledSendingAt = scheduleTime
-	msg.Status = core.MessageStatusScheduled
 	err = s.Storage.UpdateMessage(ctx, msg)
 	if err != nil {
 		return fmt.Errorf("failed to update message: %w", err)
