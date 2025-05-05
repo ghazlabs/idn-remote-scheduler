@@ -393,6 +393,8 @@
           defaultHour: new Date().getHours(),
           defaultMinute: new Date().getMinutes(),
         });
+
+        document.getElementById(elementId).value = "";
       }
 
       // Truncate text
@@ -672,6 +674,7 @@
       function hideRetryModal() {
         document.getElementById("retryModal").classList.add("hidden");
         document.getElementById("retryModal").classList.remove("flex");
+        document.getElementById("retryScheduledTime").value = "";
 
         updateRetryType(IMMEDIATE_RETRY_TYPE);
       }
