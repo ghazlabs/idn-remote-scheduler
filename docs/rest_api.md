@@ -15,7 +15,7 @@ For authenticating the call, client is expected to submit basic authentication u
 
 GET: `/check`
 
-This endpoint is used to check initial of the system.
+This endpoint is used to verify that the system is up and running.  
 
 **Headers:**
 

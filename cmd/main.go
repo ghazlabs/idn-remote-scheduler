@@ -56,7 +56,7 @@ func main() {
 		DB: mysqlClient,
 	})
 	if err != nil {
-		log.Fatalf("failed to initialize approval storage: %v", err)
+		log.Fatalf("failed to initialize MySQL storage: %v", err)
 	}
 
 	gocronScheduler, err := scheduler.NewGoCronScheduler(scheduler.GoCronSchedulerConfig{

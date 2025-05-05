@@ -87,7 +87,7 @@ func (s *GoCronScheduler) ScheduleMessage(ctx context.Context, msg core.Message)
 
 func (s *GoCronScheduler) sendMessage(ctx context.Context, msg core.Message) {
 	now := time.Now().Unix()
-	err := s.Publisher.Publish(context.Background(), msg)
+	err := s.Publisher.Publish(ctx, msg)
 	if err != nil {
 		// if message failed to send more than max retries
 		// or if the error is session expired
