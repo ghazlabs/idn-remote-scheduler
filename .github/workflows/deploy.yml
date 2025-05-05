@@ -24,7 +24,7 @@ jobs:
             cd ~/go/src/github.com/ghazlabs/idn-remote-scheduler
             git checkout main
             git pull
-            make deploy-wa-scheduler-ec2
+            make deploy-ec2-wa-scheduler
           EOF
 
           rm -f private_key.pem
