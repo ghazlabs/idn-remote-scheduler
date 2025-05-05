@@ -14,17 +14,14 @@
     />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
     <!-- Multi-select input -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/choices.js/10.1.0/choices.min.css"
-    />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/choices.js/10.1.0/choices.min.js"></script>
+    <script src=" https://cdn.jsdelivr.net/npm/choices.js@11.1.0/public/assets/scripts/choices.min.js "></script>
+    <link href=" https://cdn.jsdelivr.net/npm/choices.js@11.1.0/public/assets/styles/choices.min.css " rel="stylesheet">
   </head>
   <body class="bg-gray-100 min-h-screen">
     <!-- Login Modal -->
     <div
       id="loginModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50"
     >
       <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
         <div class="flex justify-between items-center mb-6">
@@ -86,8 +83,7 @@
           <div class="flex items-center">
             <i data-feather="alert-circle" class="mr-2"></i>
             <span
-              >WhatsApp session has expired. Please re-authenticate your
-              session.</span
+              >Some messages failed to send because your session expired. Please reconnect and retry the schedule to send any unsent messages.</span
             >
           </div>
           <button id="closeSessionAlert" class="focus:outline-none">
@@ -155,18 +151,20 @@
                 class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               ></textarea>
             </div>
-            <div>
-              <label
-                for="scheduledTime"
-                class="block text-sm font-medium text-gray-700 mb-1"
-                >Schedule Date & Time (Asia/Jakarta)</label
-              >
-              <input
-                type="text"
-                id="scheduledTime"
-                name="scheduledTime"
-                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
+            <div class="flex flex-col">
+              <div>
+                <label
+                  for="scheduledTime"
+                  class="block text-sm font-medium text-gray-700 mb-1"
+                  >Schedule Date & Time (UTC+7 Asia/Jakarta)</label
+                >
+                <input
+                  type="text"
+                  id="scheduledTime"
+                  name="scheduledTime"
+                  class="w-1/4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
             </div>
             <div class="flex justify-end">
               <button
@@ -327,11 +325,13 @@
 
       // Mock Functions - Replace with actual API calls
       const auth = {
-        token: null,
-        username: null,
-        password: null,
-        defaultNumbers: [],
+        token: localStorage.getItem("web_client_token"),
+        defaultNumbers: localStorage.getItem("web_client_default_numbers") 
+                          ? JSON.parse(localStorage.getItem("web_client_default_numbers"))
+                          : null,
       };
+
+      let choices;
 
       // Base64 encode for basic auth
       function encodeCredentials(username, password) {
@@ -392,10 +392,11 @@
 
           const data = await response.json();
           if (data.ok) {
-            auth.username = username;
-            auth.password = password;
             auth.token = encodeCredentials(username, password);
             auth.defaultNumbers = data.data.default_numbers || [];
+            localStorage.setItem("web_client_token", auth.token)
+            localStorage.setItem("web_client_default_numbers", JSON.stringify(auth.defaultNumbers))
+
             return true;
           }
           return false;
@@ -417,6 +418,7 @@
 
           if (!response.ok) {
             if (response.status === 401) {
+              auth.token = null;
               showLoginModal();
               return [];
             }
@@ -497,14 +499,27 @@
       }
 
       // UI Functions
+      function initPage() {
+        if (!auth.token) {
+          showLoginModal();
+        } else {
+          showDashboard();
+        }
+      }
+
       function showLoginModal() {
         document.getElementById("loginModal").classList.remove("hidden");
+        document.getElementById("loginModal").classList.add("flex");
         document.getElementById("dashboard").classList.add("hidden");
       }
 
       function showDashboard() {
         document.getElementById("loginModal").classList.add("hidden");
+        document.getElementById("loginModal").classList.remove("flex");
         document.getElementById("dashboard").classList.remove("hidden");
+
+        initRecipientsSelect();
+        
         loadMessages();
       }
 
@@ -756,33 +771,41 @@
       // Initialize recipients multi-select
       function initRecipientsSelect() {
         const recipientsSelect = document.getElementById("recipients");
-        const choices = new Choices(recipientsSelect, {
+        choices = new Choices(recipientsSelect, {
           removeItemButton: true,
           allowHTML: false,
           placeholder: true,
           placeholderValue: "Enter or select recipients",
           addItems: true,
-          createItemText: "Add custom number",
-          createItemFilter: function (value) {
-            return value.length > 0;
-          },
+          addChoices: true,
         });
 
         // Add default numbers
+        resetRecipientsSelect();
+      }
+
+      function initRecipientsSelectItems() {
+        const items = [];
         auth.defaultNumbers.forEach((number) => {
-          choices.setChoices(
-            [{ value: number, label: number }],
-            "value",
-            "label",
-            true
-          );
+          items.push({ value: number, label: number })
         });
 
-        return choices;
+        return items;
+      }
+
+      function resetRecipientsSelect() {
+        choices.setChoices(
+          initRecipientsSelectItems(),
+          "value",
+          "label",
+          true
+        );
       }
 
       // Event Listeners
       document.addEventListener("DOMContentLoaded", () => {
+        initPage();
+
         // Initialize date pickers
         initDatePicker("scheduledTime");
         initDatePicker("retryScheduledTime");
@@ -803,8 +826,8 @@
               // Show dashboard
               showDashboard();
 
-              // Initialize recipients select
-              initRecipientsSelect();
+              // // Initialize recipients select
+              // initRecipientsSelect();
             } else {
               document.getElementById("loginError").classList.remove("hidden");
             }
@@ -812,9 +835,9 @@
 
         // Logout button
         document.getElementById("logoutBtn").addEventListener("click", () => {
+          localStorage.setItem("web_client_token", "")
+          localStorage.setItem("web_client_default_numbers", [])
           auth.token = null;
-          auth.username = null;
-          auth.password = null;
           auth.defaultNumbers = [];
           showLoginModal();
         });
@@ -876,7 +899,10 @@
             );
             if (success) {
               alert("Message scheduled successfully");
+
               document.getElementById("scheduleForm").reset();
+              choices.removeActiveItems()
+
               await loadMessages();
             } else {
               alert("Failed to schedule message");
@@ -934,27 +960,6 @@
               alert("Failed to schedule message retry");
             }
           });
-
-        // Check for existing session
-        const savedUsername = localStorage.getItem(
-          "whatsapp_scheduler_username"
-        );
-        const savedPassword = localStorage.getItem(
-          "whatsapp_scheduler_password"
-        );
-
-        if (savedUsername && savedPassword) {
-          document.getElementById("username").value = savedUsername;
-          document.getElementById("password").value = savedPassword;
-
-          // Auto-login
-          checkAuth(savedUsername, savedPassword).then((isAuthenticated) => {
-            if (isAuthenticated) {
-              showDashboard();
-              initRecipientsSelect();
-            }
-          });
-        }
       });
     </script>
   </body>
