@@ -3,6 +3,7 @@ package wa
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/ghazlabs/idn-remote-scheduler/internal/core"
 	"github.com/go-resty/resty/v2"
@@ -59,6 +60,7 @@ func (n *WaPublisher) sendMessage(ctx context.Context, recID string, content str
 		return fmt.Errorf("unable to make http request: %w", err)
 	}
 	if resp.IsError() {
+		slog.Error("failed to send wa message", slog.String("response", rsp.String()))
 		if rsp.IsSessionExpired() {
 			return core.ErrSessionExpired
 		}
