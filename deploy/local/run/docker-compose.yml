@@ -31,7 +31,7 @@ services:
       - APP_OS=Chrome
       - APP_ACCOUNT_VALIDATION=false
 
-  server:
+  server-scheduler:
     build:
       context: ../../../
       dockerfile: ./build/package/Dockerfile
