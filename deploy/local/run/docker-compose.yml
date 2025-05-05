@@ -49,8 +49,8 @@ services:
       - CLIENT_PASSWORD=admin
       - DEFAULT_NUMBERS=120363026176938692@g.us
       - WA_PUBLISHER_API_BASE_URL=http://whatsapp:3000
-      - WA_PUBLISHER_API_KEY=admin
-      - WA_PUBLISHER_API_SECRET=admin
+      - WA_PUBLISHER_USERNAME=admin
+      - WA_PUBLISHER_PASSWORD=admin
     ports:
       - "9865:9865"
 
