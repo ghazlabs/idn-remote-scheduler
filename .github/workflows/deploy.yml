@@ -1,0 +1,30 @@
+name: Deploy
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: SSH and Run Commands on Remote Server
+        env:
+          PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.SSH_USERNAME_PROD }}@${{ secrets.SSH_HOST_PROD }} <<EOF
+            cd ~/go/src/github.com/ghazlabs/idn-remote-scheduler
+            git checkout main
+            git pull
+            make deploy-ec2
+          EOF
+
+          rm -f private_key.pem
