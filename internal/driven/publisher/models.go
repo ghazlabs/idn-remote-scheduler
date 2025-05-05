@@ -1,7 +1,10 @@
 package wa
 
+import "encoding/json"
+
 type RespSendMessage struct {
-	Code string `json:"code"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
 }
 
 func (r *RespSendMessage) IsSessionExpired() bool {
@@ -10,4 +13,9 @@ func (r *RespSendMessage) IsSessionExpired() bool {
 	}
 
 	return false
+}
+
+func (r RespSendMessage) String() string {
+	json, _ := json.Marshal(r)
+	return string(json)
 }
