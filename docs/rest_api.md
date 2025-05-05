@@ -1,22 +1,21 @@
 # REST API
 
-For authenticating the call, client is expected to submit basic authentication using a
- predefined username and password. You can lookup the value of this key from `CLIENT_USERNAME` and `CLIENT_PASSWORD` environment variable.
+For authenticating the call, client is expected to submit basic authentication using a predefined username and password. You can lookup the value of this key from `CLIENT_USERNAME` and `CLIENT_PASSWORD` environment variable.
 
 **Table of contents:**
 
 - [REST API](#rest-api)
-  - [Health Check](#health-check)
+  - [Check](#check)
   - [Get All Messages](#get-all-messages)
-  - [Send Message](#send-message)
+  - [Schedule Message](#schedule-message)
   - [Retry Message](#retry-message)
   - [System Errors](#system-errors)
 
-## Health Check
+## Check
 
-GET: `/health`
+GET: `/check`
 
-This endpoint is used to check the health of the system. It returns a simple JSON response indicating the system is up and running.
+This endpoint is used to verify that the system is up and running.  
 
 **Headers:**
 
@@ -28,7 +27,7 @@ This endpoint is used to check the health of the system. It returns a simple JSO
 **Example Call:**
 
 ```json
-GET /health
+GET /check
 Authorization: Basic admF6bGFicy5jb206cGFzc3dvcmQ=
 Content-Type: application/json
 ```
@@ -41,6 +40,11 @@ Content-Type: application/json
 
 {
     "ok": true,
+    "data": {
+      "default_numbers": [
+        "120363352351961275@g.us"
+      ]
+    },
     "ts": 1735432224
 }
 ```
@@ -76,11 +80,14 @@ Content-Type: application/json
 
 {
     "ok": true,
-    "messages": [
+    "data": [
         // scheduled message, should be sent at `scheduled_sending_at`
         {
             "id": "1da2f3e4-5b6c-7d8e-9a0b-c1d2e3f4g5h6",
-            "message": "Job alert for Software Engineer at Invertase...",
+            "content": "Job alert for Software Engineer at Invertase...",
+            "recipient_numbers": [
+              "120363352351961275@g.us"
+            ],
             "scheduled_sending_at": 1735432224,
             "sent_at": null,
             "retried_count": 0,
@@ -92,7 +99,11 @@ Content-Type: application/json
         // successfully sent message, `sent_at` is set
         {
             "id": "2b3c4d5e-6f7g-8h9i-0j1k-l2m3n4o5p6q7",
-            "message": "Job alert for Software Engineer at dev.to...",
+            "content": "Job alert for Software Engineer at dev.to...",
+            "recipient_numbers": [
+              "120363352351961274@g.us",
+              "120363352351961275@g.us"
+            ],
             "scheduled_sending_at": 1735432224,
             "sent_at": 1735432224,
             "retried_count": 0,
@@ -104,7 +115,11 @@ Content-Type: application/json
         // has been retried and expected to be sent
         {
             "id": "2b3c4d5e-6f7g-8h9i-0j1k-l2m3n4o5p6q7",
-            "message": "Job alert for Software Engineer at dev.to...",
+            "content": "Job alert for Software Engineer at dev.to...",
+            "recipient_numbers": [
+              "120363352351961274@g.us",
+              "120363352351961275@g.us"
+            ],
             "scheduled_sending_at": 1735432224,
             "sent_at": null,
             "retried_count": 1,
@@ -116,7 +131,11 @@ Content-Type: application/json
         // failed message, 
         {
             "id": "2b3c4d5e-6f7g-8h9i-0j1k-l2m3n4o5p6q7",
-            "message": "Job alert for Software Engineer at dev.to...",
+            "content": "Job alert for Software Engineer at dev.to...",
+            "recipient_numbers": [
+              "120363352351961274@g.us",
+              "120363352351961275@g.us"
+            ],
             "scheduled_sending_at": 1735432224,
             "sent_at": null,
             "retried_count": 3,
@@ -132,7 +151,7 @@ Content-Type: application/json
 
 [Back to Top](#rest-api)
 
-## Send Message
+## Schedule Message
 
 POST: `/messages`
 
@@ -147,16 +166,16 @@ This endpoint is used to send a scheduled message to Whatsapp.
 
 **Body Payload:**
 
-| Field               | Type            | Required | Description                                            |
-| ------------------- | --------------- | -------- | ------------------------------------------------------ |
-| `recipient_numbers` | Array of string | Yes      | The list of recipient numbers.                         |
-| `message`           | String          | Yes      | The message to be sent.                                |
-| `scheduled_sending_at`        | Number          | Yes      | The Unix timestamp of when the message should be sent. |
+| Field                  | Type            | Required | Description                                            |
+| ---------------------- | --------------- | -------- | ------------------------------------------------------ |
+| `recipient_numbers`    | Array of string | Yes      | The list of recipient numbers.                         |
+| `message`              | String          | Yes      | The message to be sent.                                |
+| `scheduled_sending_at` | Number          | Yes      | The Unix timestamp of when the message should be sent. |
 
 **Example Call:**
 
 ```json
-POST /vacancies
+POST /messages
 Authorization: Basic admF6bGFicy5jb206cGFzc3dvcmQ=
 Content-Type: application/json
 
@@ -165,7 +184,7 @@ Content-Type: application/json
         "120363352351961274@g.us",
         "120363352351961275@g.us"
     ],
-    "message": "Job alert for Software Engineer at Invertase...",
+    "content": "Job alert for Software Engineer at Invertase...",
     "scheduled_sending_at": 1735432224
 }
 ```
@@ -199,8 +218,8 @@ This endpoint is used to retry a failed and halted message. The message will be 
 
 **Body Payload:**
 
-| Field        | Type   | Required | Description                                                                                          |
-| ------------ | ------ | -------- | ---------------------------------------------------------------------------------------------------- |
+| Field                  | Type   | Required | Description                                                                                          |
+| ---------------------- | ------ | -------- | ---------------------------------------------------------------------------------------------------- |
 | `scheduled_sending_at` | Number | No       | The Unix timestamp of when the message should be sent. If not provided, it will be sent immediately. |
 
 **Example Call:**

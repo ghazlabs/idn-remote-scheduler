@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WhatsApp Message Scheduler</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Feather Icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <!-- Date and Time picker -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+    <!-- Multi-select input -->
+    <script src=" https://cdn.jsdelivr.net/npm/choices.js@11.1.0/public/assets/scripts/choices.min.js "></script>
+    <link href=" https://cdn.jsdelivr.net/npm/choices.js@11.1.0/public/assets/styles/choices.min.css " rel="stylesheet">
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <!-- Login Modal -->
+    <div
+      id="loginModal"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-800">
+            WhatsApp Message Scheduler
+          </h2>
+          <div class="text-green-500">
+            <i data-feather="message-circle"></i>
+          </div>
+        </div>
+        <div
+          id="loginError"
+          class="hidden mb-4 p-3 bg-red-100 text-red-700 rounded-md"
+        >
+          Invalid username or password
+        </div>
+        <form id="loginForm" class="space-y-4">
+          <div>
+            <label
+              for="username"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >Username</label
+            >
+            <input
+              type="text"
+              id="username"
+              name="username"
+              class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          <div>
+            <label
+              for="password"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >Password</label
+            >
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+          >
+            Login
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="hidden">
+      <!-- Session Expired Alert -->
+      <div id="sessionExpiredAlert" class="hidden bg-red-500 text-white p-4">
+        <div class="container mx-auto flex items-center justify-between">
+          <div class="flex items-center">
+            <i data-feather="alert-circle" class="mr-2"></i>
+            <span
+              >Some messages failed to send because your session expired. Please reconnect and retry the schedule to send any unsent messages.</span
+            >
+          </div>
+          <button id="closeSessionAlert" class="focus:outline-none">
+            <i data-feather="x"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Header -->
+      <header class="bg-white shadow">
+        <div
+          class="container mx-auto px-4 py-4 flex justify-between items-center"
+        >
+          <div class="flex items-center">
+            <h1 class="text-xl font-bold text-gray-800">
+              WhatsApp Message Scheduler
+            </h1>
+            <span
+              class="ml-4 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
+            >
+              <span id="connectionStatus">Connected</span>
+            </span>
+          </div>
+          <button
+            id="logoutBtn"
+            class="flex items-center text-gray-600 hover:text-gray-800"
+          >
+            <span class="mr-2">Logout</span>
+            <i data-feather="log-out" class="h-4 w-4"></i>
+          </button>
+        </div>
+      </header>
+
+      <main class="container mx-auto px-4 py-6">
+        <!-- Schedule Message Form -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 class="text-lg font-semibold mb-4">Schedule New Message</h2>
+          <form id="scheduleForm" class="space-y-4">
+            <div>
+              <label
+                for="recipients"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Recipients</label
+              >
+              <select
+                id="recipients"
+                name="recipients"
+                multiple
+                class="w-full"
+              ></select>
+              <p class="mt-1 text-xs text-gray-500">
+                You can select from default numbers or enter custom numbers
+              </p>
+            </div>
+            <div>
+              <label
+                for="messageContent"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Message Content</label
+              >
+              <textarea
+                id="messageContent"
+                name="messageContent"
+                rows="4"
+                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              ></textarea>
+            </div>
+            <div class="flex flex-col">
+              <div>
+                <label
+                  for="scheduledTime"
+                  class="block text-sm font-medium text-gray-700 mb-1"
+                  >Schedule Date & Time (UTC+7 Asia/Jakarta)</label
+                >
+                <input
+                  type="text"
+                  id="scheduledTime"
+                  name="scheduledTime"
+                  class="w-1/4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+            </div>
+            <div class="flex justify-end">
+              <button
+                type="submit"
+                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              >
+                Schedule Message
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Messages List -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-lg font-semibold mb-4">Scheduled Messages</h2>
+          <button
+            id="refreshMessages"
+            class="flex items-center text-gray-600 hover:text-gray-800"
+          >
+            <i data-feather="refresh-cw" class="h-4 w-4 mr-1"></i>
+            <span>Refresh</span>
+          </button>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Content
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Recipients
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Scheduled For
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Status
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Retries
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                id="messagesList"
+                class="bg-white divide-y divide-gray-200"
+              >
+                <!-- Messages will be loaded here -->
+              </tbody>
+            </table>
+          </div>
+          <div id="noMessages" class="hidden py-4 text-center text-gray-500">
+            No messages scheduled
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Message Detail Modal -->
+    <div
+      id="messageDetailModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    >
+      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-bold">Message Detail</h2>
+          <button
+            id="closeDetailModal"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i data-feather="x"></i>
+          </button>
+        </div>
+        <div id="messageDetail" class="space-y-4">
+          <!-- Message details will be loaded here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Retry Modal -->
+    <div id="retryModal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 hidden">
+      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-bold">Retry Failed Message</h2>
+          <button
+            id="closeRetryModalBtn"
+            class="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
+            aria-label="Close"
+          >
+            <i data-feather="x"></i>
+          </button>
+        </div>
+
+        <form id="retryForm" class="space-y-4">
+          <input type="hidden" id="retryMessageId" />
+          
+          <div class="flex bg-gray-100 p-1 rounded-md mb-2">
+            <button
+              type="button"
+              id="retryImmediateBtn"
+              class="flex-1 py-2 px-3 rounded-md flex items-center justify-center gap-2 transition-all bg-white shadow-sm text-green-600"
+            >
+              <i data-feather="zap" class="w-4 h-4"></i>
+              <span>Immediate</span>
+            </button>
+            <button
+              type="button"
+              id="retryScheduledBtn"
+              class="flex-1 py-2 px-3 rounded-md flex items-center justify-center gap-2 transition-all text-gray-600 hover:bg-gray-200"
+            >
+              <i data-feather="clock" class="w-4 h-4"></i>
+              <span>Scheduled</span>
+            </button>
+          </div>
+
+          <div id="scheduledTimeContainer" class="hidden animate-fadeIn">
+            <label
+              for="retryScheduledTime"
+              class="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Schedule Date & Time (UTC+7 Asia/Jakarta)
+            </label>
+            <input
+              type="text"
+              id="retryScheduledTime"
+              class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+              placeholder="YYYY-MM-DD HH:MM:SS"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              Format: YYYY-MM-DD HH:MM:SS
+            </p>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button
+              type="button"
+              id="cancelRetryBtn"
+              class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md mr-2 hover:bg-gray-100 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              id="submitBtn"
+              class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+            >
+              <i data-feather="zap" class="w-4 h-4"></i>
+              <span>Retry Now</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // Initialize icons
+      document.addEventListener("DOMContentLoaded", () => {
+        feather.replace();
+      });
+
+      // Mock Functions - Replace with actual API calls
+      const auth = {
+        token: localStorage.getItem("web_client_token"),
+        defaultNumbers: localStorage.getItem("web_client_default_numbers") 
+                          ? JSON.parse(localStorage.getItem("web_client_default_numbers"))
+                          : null,
+      };
+      const IMMEDIATE_RETRY_TYPE = "immmediate";
+      const SCHEDULED_RETRY_TYPE = "scheduled";
+
+      let choices;
+      let retryType = IMMEDIATE_RETRY_TYPE;
+
+      // Base64 encode for basic auth
+      function encodeCredentials(username, password) {
+        return btoa(`${username}:${password}`);
+      }
+
+      // Check if there's a session expired message
+      function checkForSessionExpired(messages) {
+        for (let message of messages) {
+          if (
+            message.status === "failed" &&
+            message.reason === "session expired"
+          ) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      // Format date from timestamp
+      function formatDate(timestamp) {
+        const date = new Date(timestamp * 1000);
+        return date.toLocaleString("en-ID", { timeZone: "Asia/Jakarta" });
+      }
+
+      // Initialize date picker
+      function initDatePicker(elementId) {
+        flatpickr(`#${elementId}`, {
+          enableTime: true,
+          minuteIncrement: 1,
+          dateFormat: "Y-m-d H:i",
+          time_24hr: true,
+          minDate: "today",
+          defaultHour: new Date().getHours(),
+          defaultMinute: new Date().getMinutes(),
+        });
+
+        document.getElementById(elementId).value = "";
+      }
+
+      // Truncate text
+      function truncateText(text, maxLength = 50) {
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + "...";
+      }
+
+      // API Calls
+      async function checkAuth(username, password) {
+        try {
+          const response = await fetch("/check", {
+            method: "GET",
+            headers: {
+              Authorization: `Basic ${encodeCredentials(username, password)}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error("Authentication failed");
+          }
+
+          const data = await response.json();
+          if (data.ok) {
+            auth.token = encodeCredentials(username, password);
+            auth.defaultNumbers = data.data.default_numbers || [];
+            localStorage.setItem("web_client_token", auth.token)
+            localStorage.setItem("web_client_default_numbers", JSON.stringify(auth.defaultNumbers))
+
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error("Auth check error:", error);
+          return false;
+        }
+      }
+
+      async function getAllMessages() {
+        try {
+          const response = await fetch("/messages", {
+            method: "GET",
+            headers: {
+              Authorization: `Basic ${auth.token}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            if (response.status === 401) {
+              auth.token = null;
+              showLoginModal();
+              return [];
+            }
+            throw new Error("Failed to fetch messages");
+          }
+
+          const data = await response.json();
+          return data.data || [];
+        } catch (error) {
+          console.error("Get messages error:", error);
+          return [];
+        }
+      }
+
+      async function scheduleMessage(
+        recipientNumbers,
+        content,
+        scheduledSendingAt
+      ) {
+        try {
+          const response = await fetch("/messages", {
+            method: "POST",
+            headers: {
+              Authorization: `Basic ${auth.token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              recipient_numbers: recipientNumbers,
+              content: content,
+              scheduled_sending_at: scheduledSendingAt,
+            }),
+          });
+
+          if (!response.ok) {
+            if (response.status === 401) {
+              showLoginModal();
+              return false;
+            }
+            throw new Error("Failed to schedule message");
+          }
+
+          const data = await response.json();
+          return data.ok;
+        } catch (error) {
+          console.error("Schedule message error:", error);
+          return false;
+        }
+      }
+
+      async function retryMessage(messageId, scheduledSendingAt = null) {
+        try {
+          const body = scheduledSendingAt
+            ? { scheduled_sending_at: scheduledSendingAt }
+            : {};
+          const response = await fetch(`/messages/${messageId}/retry`, {
+            method: "POST",
+            headers: {
+              Authorization: `Basic ${auth.token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+          });
+
+          if (!response.ok) {
+            if (response.status === 401) {
+              showLoginModal();
+              return false;
+            }
+            throw new Error("Failed to retry message");
+          }
+
+          const data = await response.json();
+          return data.ok;
+        } catch (error) {
+          console.error("Retry message error:", error);
+          return false;
+        }
+      }
+
+      // UI Functions
+      function initPage() {
+        if (!auth.token) {
+          showLoginModal();
+        } else {
+          showDashboard();
+        }
+      }
+
+      function showLoginModal() {
+        document.getElementById("loginModal").classList.remove("hidden");
+        document.getElementById("loginModal").classList.add("flex");
+        document.getElementById("dashboard").classList.add("hidden");
+      }
+
+      function showDashboard() {
+        document.getElementById("loginModal").classList.add("hidden");
+        document.getElementById("loginModal").classList.remove("flex");
+        document.getElementById("dashboard").classList.remove("hidden");
+
+        initRecipientsSelect();
+        
+        loadMessages();
+      }
+
+      function showMessageDetailModal(message) {
+        const modal = document.getElementById("messageDetailModal");
+        const detailContainer = document.getElementById("messageDetail");
+
+        // Format the message details
+        let statusClass = "";
+        switch (message.status) {
+          case "sent":
+            statusClass = "bg-green-100 text-green-800";
+            break;
+          case "scheduled":
+            statusClass = "bg-blue-100 text-blue-800";
+            break;
+          case "failed":
+            statusClass = "bg-red-100 text-red-800";
+            break;
+        }
+
+        detailContainer.innerHTML = `
+                <div>
+                    <span class="font-semibold">ID:</span> ${message.id}
+                </div>
+                <div>
+                    <span class="font-semibold">Content:</span>
+                    <div class="mt-1 p-3 bg-gray-50 rounded">${
+                      message.content
+                    }</div>
+                </div>
+                <div>
+                    <span class="font-semibold">Recipients:</span>
+                    <div class="mt-1 flex flex-wrap gap-1">
+                        ${message.recipient_numbers
+                          .map(
+                            (number) =>
+                              `<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">${number}</span>`
+                          )
+                          .join("")}
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <span class="font-semibold">Scheduled At:</span>
+                        <div class="mt-1">${formatDate(
+                          message.scheduled_sending_at
+                        )}</div>
+                    </div>
+                    <div>
+                        <span class="font-semibold">Sent At:</span>
+                        <div class="mt-1">${
+                          message.sent_at
+                            ? formatDate(message.sent_at)
+                            : "Not sent yet"
+                        }</div>
+                    </div>
+                    <div>
+                        <span class="font-semibold">Status:</span>
+                        <div class="mt-1"><span class="px-2 py-1 rounded ${statusClass}">${
+          message.status
+        }</span></div>
+                    </div>
+                    <div>
+                        <span class="font-semibold">Retry Count:</span>
+                        <div class="mt-1">${message.retried_count}</div>
+                    </div>
+                </div>
+                ${
+                  message.reason
+                    ? `
+                <div>
+                    <span class="font-semibold">Failure Reason:</span>
+                    <div class="mt-1 text-red-600">${message.reason}</div>
+                </div>
+                `
+                    : ""
+                }
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <span class="font-semibold">Created At:</span>
+                        <div class="mt-1">${formatDate(
+                          message.created_at
+                        )}</div>
+                    </div>
+                    <div>
+                        <span class="font-semibold">Updated At:</span>
+                        <div class="mt-1">${formatDate(
+                          message.updated_at
+                        )}</div>
+                    </div>
+                </div>
+                ${
+                  message.status === "failed"
+                    ? `
+                <div class="mt-4">
+                    <button id="retryFromDetail" data-message-id="${message.id}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                        Retry Message
+                    </button>
+                </div>
+                `
+                    : ""
+                }
+            `;
+
+        modal.classList.remove("hidden");
+
+        // Add event listener for retry button
+        const retryBtn = document.getElementById("retryFromDetail");
+        if (retryBtn) {
+          retryBtn.addEventListener("click", () => {
+            modal.classList.add("hidden");
+            showRetryModal(message.id);
+          });
+        }
+      }
+
+      function showRetryModal(messageId) {
+        document.getElementById("retryMessageId").value = messageId;
+        document.getElementById("retryModal").classList.remove("hidden");
+        document.getElementById("retryModal").classList.add("flex");
+      }
+
+      function hideRetryModal() {
+        document.getElementById("retryModal").classList.add("hidden");
+        document.getElementById("retryModal").classList.remove("flex");
+        document.getElementById("retryScheduledTime").value = "";
+
+        updateRetryType(IMMEDIATE_RETRY_TYPE);
+      }
+
+      function renderMessagesList(messages) {
+        const messagesList = document.getElementById("messagesList");
+        const noMessages = document.getElementById("noMessages");
+
+        if (!messages || messages.length === 0) {
+          messagesList.innerHTML = "";
+          noMessages.classList.remove("hidden");
+          return;
+        }
+
+        noMessages.classList.add("hidden");
+
+        messagesList.innerHTML = messages
+          .map((message) => {
+            // Determine status badge class
+            let statusBadgeClass = "";
+            switch (message.status) {
+              case "sent":
+                statusBadgeClass = "bg-green-100 text-green-800";
+                break;
+              case "scheduled":
+                statusBadgeClass = "bg-blue-100 text-blue-800";
+                break;
+              case "failed":
+                statusBadgeClass = "bg-red-100 text-red-800";
+                break;
+            }
+
+            return `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${truncateText(
+                          message.content
+                        )}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${
+                          message.recipient_numbers.length
+                        } recipient${message.recipient_numbers.length > 1 ? 's' : ''}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${formatDate(
+                          message.scheduled_sending_at
+                        )}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusBadgeClass}">
+                            ${message.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${
+                          message.retried_count
+                        }</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="view-details text-blue-600 hover:text-blue-900 mr-3" data-id="${
+                          message.id
+                        }">
+                            View
+                        </button>
+                        ${
+                          message.status === "failed"
+                            ? `
+                        <button class="retry-message text-green-600 hover:text-green-900" data-id="${message.id}">
+                            Retry
+                        </button>
+                        `
+                            : ""
+                        }
+                    </td>
+                </tr>
+                `;
+          })
+          .join("");
+
+        // Add event listeners to buttons
+        document.querySelectorAll(".view-details").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const messageId = btn.getAttribute("data-id");
+            const message = messages.find((m) => m.id === messageId);
+            if (message) {
+              showMessageDetailModal(message);
+            }
+          });
+        });
+
+        document.querySelectorAll(".retry-message").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const messageId = btn.getAttribute("data-id");
+            showRetryModal(messageId);
+          });
+        });
+      }
+
+      async function loadMessages() {
+        const messages = await getAllMessages();
+        renderMessagesList(messages);
+
+        // Check for session expired messages
+        if (checkForSessionExpired(messages)) {
+          document
+            .getElementById("sessionExpiredAlert")
+            .classList.remove("hidden");
+          document.getElementById("connectionStatus").textContent =
+            "Disconnected";
+          document
+            .getElementById("connectionStatus")
+            .parentElement.classList.remove("bg-green-100", "text-green-800");
+          document
+            .getElementById("connectionStatus")
+            .parentElement.classList.add("bg-red-100", "text-red-800");
+        } else {
+          document
+            .getElementById("sessionExpiredAlert")
+            .classList.add("hidden");
+          document.getElementById("connectionStatus").textContent = "Connected";
+          document
+            .getElementById("connectionStatus")
+            .parentElement.classList.remove("bg-red-100", "text-red-800");
+          document
+            .getElementById("connectionStatus")
+            .parentElement.classList.add("bg-green-100", "text-green-800");
+        }
+      }
+
+      const updateRetryType = (type) => {
+        retryType = type;
+        const retryImmediateBtn = document.getElementById("retryImmediateBtn")
+        const retryScheduledBtn = document.getElementById("retryScheduledBtn")
+        const scheduledTimeContainer = document.getElementById("scheduledTimeContainer")
+
+        if (type === IMMEDIATE_RETRY_TYPE) {
+          retryImmediateBtn.classList.add('bg-white', 'shadow-sm', 'text-green-600');
+          retryImmediateBtn.classList.remove('text-gray-600', 'hover:bg-gray-200');
+          retryScheduledBtn.classList.remove('bg-white', 'shadow-sm', 'text-green-600');
+          retryScheduledBtn.classList.add('text-gray-600', 'hover:bg-gray-200');
+          scheduledTimeContainer.classList.add('hidden');
+          submitBtn.innerHTML = `
+            <i data-feather="zap" class="w-4 h-4"></i>
+            <span>Retry Now</span>
+          `;
+        }
+
+        if (type === SCHEDULED_RETRY_TYPE) {
+          retryScheduledBtn.classList.add('bg-white', 'shadow-sm', 'text-green-600');
+          retryScheduledBtn.classList.remove('text-gray-600', 'hover:bg-gray-200');
+          retryImmediateBtn.classList.remove('bg-white', 'shadow-sm', 'text-green-600');
+          retryImmediateBtn.classList.add('text-gray-600', 'hover:bg-gray-200');
+          scheduledTimeContainer.classList.remove('hidden');
+          submitBtn.innerHTML = `
+            <i data-feather="clock" class="w-4 h-4"></i>
+            <span>Schedule Retry</span>
+          `;
+        }
+
+        feather.replace();
+      };
+
+      // Initialize recipients multi-select
+      function initRecipientsSelect() {
+        const recipientsSelect = document.getElementById("recipients");
+        choices = new Choices(recipientsSelect, {
+          removeItemButton: true,
+          allowHTML: false,
+          placeholder: true,
+          placeholderValue: "Enter or select recipients",
+          addItems: true,
+          addChoices: true,
+        });
+
+        // Add default numbers
+        resetRecipientsSelect();
+      }
+
+      function initRecipientsSelectItems() {
+        const items = [];
+        auth.defaultNumbers.forEach((number) => {
+          items.push({ value: number, label: number })
+        });
+
+        return items;
+      }
+
+      function resetRecipientsSelect() {
+        choices.setChoices(
+          initRecipientsSelectItems(),
+          "value",
+          "label",
+          true
+        );
+      }
+
+      // Event Listeners
+      document.addEventListener("DOMContentLoaded", () => {
+        initPage();
+
+        // Initialize date pickers
+        initDatePicker("scheduledTime");
+        initDatePicker("retryScheduledTime");
+
+        // Login form submit
+        document
+          .getElementById("loginForm")
+          .addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            const isAuthenticated = await checkAuth(username, password);
+            if (isAuthenticated) {
+              // Hide login error if shown
+              document.getElementById("loginError").classList.add("hidden");
+
+              // Show dashboard
+              showDashboard();
+
+              // // Initialize recipients select
+              // initRecipientsSelect();
+            } else {
+              document.getElementById("loginError").classList.remove("hidden");
+            }
+          });
+
+        // Logout button
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+          localStorage.setItem("web_client_token", "")
+          localStorage.setItem("web_client_default_numbers", [])
+          auth.token = null;
+          auth.defaultNumbers = [];
+          showLoginModal();
+        });
+
+        // Refresh button
+        document.getElementById("refreshMessages").addEventListener("click", () => {
+            loadMessages();
+        });
+
+        // Close session expired alert
+        document
+          .getElementById("closeSessionAlert")
+          .addEventListener("click", () => {
+            document
+              .getElementById("sessionExpiredAlert")
+              .classList.add("hidden");
+          });
+
+        // Schedule form submit
+        document
+          .getElementById("scheduleForm")
+          .addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const recipientSelect = document.getElementById("recipients");
+            const recipientNumbers = Array.from(
+              recipientSelect.selectedOptions
+            ).map((option) => option.value);
+
+            const content = document.getElementById("messageContent").value;
+
+            // Get scheduled time and convert to timestamp
+            const scheduledTimeStr =
+              document.getElementById("scheduledTime").value;
+            const scheduledDate = new Date(scheduledTimeStr);
+            const scheduledSendingAt = Math.floor(
+              scheduledDate.getTime() / 1000
+            );
+
+            if (recipientNumbers.length === 0) {
+              alert("Please select at least one recipient");
+              return;
+            }
+
+            if (!content) {
+              alert("Please enter a message content");
+              return;
+            }
+
+            if (isNaN(scheduledSendingAt)) {
+              alert("Please select a valid date and time");
+              return;
+            }
+
+            const success = await scheduleMessage(
+              recipientNumbers,
+              content,
+              scheduledSendingAt
+            );
+            if (success) {
+              alert("Message scheduled successfully");
+
+              document.getElementById("scheduleForm").reset();
+              choices.removeActiveItems()
+
+              await loadMessages();
+            } else {
+              alert("Failed to schedule message");
+            }
+          });
+
+        // Close message detail modal
+        document
+          .getElementById("closeDetailModal")
+          .addEventListener("click", () => {
+            document
+              .getElementById("messageDetailModal")
+              .classList.add("hidden");
+          });
+
+        // Switch retry mode
+        document
+          .getElementById("retryImmediateBtn")
+          .addEventListener('click', () => updateRetryType(IMMEDIATE_RETRY_TYPE));
+        document
+          .getElementById("retryScheduledBtn")
+          .addEventListener('click', () => updateRetryType(SCHEDULED_RETRY_TYPE));
+
+        // Close retry modal
+        document
+          .getElementById("closeRetryModalBtn")
+          .addEventListener("click", () => {
+            hideRetryModal();
+          });
+
+        document
+          .getElementById("cancelRetryBtn")
+          .addEventListener("click", () => {
+          hideRetryModal();
+        });
+
+        // Retry form submit
+        document
+          .getElementById("retryForm")
+          .addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const messageId = document.getElementById("retryMessageId").value;
+            const scheduledTimeStr =
+              document.getElementById("retryScheduledTime").value;
+
+            let scheduledSendingAt = null;
+            if (retryType == IMMEDIATE_RETRY_TYPE) {
+              const scheduledDate = new Date();
+              scheduledSendingAt = Math.floor(scheduledDate.getTime() / 1000);
+            }
+
+            if (scheduledTimeStr && retryType == SCHEDULED_RETRY_TYPE) {
+              const scheduledDate = new Date(scheduledTimeStr);
+              scheduledSendingAt = Math.floor(scheduledDate.getTime() / 1000);
+
+              // Check if scheduled time is in the past
+              if (scheduledSendingAt < Math.floor(Date.now() / 1000)) {
+                alert("Scheduled time cannot be in the past");
+                return;
+              }
+            }
+
+            const success = await retryMessage(messageId, scheduledSendingAt);
+            if (success) {
+              alert("Message retry scheduled successfully");
+              document.getElementById("retryModal").classList.add("hidden");
+              await loadMessages();
+            } else {
+              alert("Failed to schedule message retry");
+            }
+
+            updateRetryType(IMMEDIATE_RETRY_TYPE);
+          });
+      });
+    </script>
+  </body>
+</html>
