@@ -106,15 +106,15 @@ func main() {
 type config struct {
 	ListenPort string `env:"LISTEN_PORT,required" envDefault:"9865"`
 
-	MysqlDSN string `env:"MYSQL_DSN,required"  envDefault:"root:test1234@tcp(mysql:3306)/idnremotescheduler?timeout=5s"`
+	MysqlDSN string `env:"MYSQL_DSN,required"`
 
-	ClientUsername string   `env:"CLIENT_USERNAME,required" envDefault:"admin"`
-	ClientPassword string   `env:"CLIENT_PASSWORD,required" envDefault:"admin"`
-	DefaultNumbers []string `env:"DEFAULT_NUMBERS,required" envDefault:"120363026176938692@g.us"`
+	ClientUsername string   `env:"CLIENT_USERNAME,required"`
+	ClientPassword string   `env:"CLIENT_PASSWORD,required"`
+	DefaultNumbers []string `env:"DEFAULT_NUMBERS,required"`
 
-	WAPublisherApiBaseUrl string `env:"WA_PUBLISHER_API_BASE_URL,required" envDefault:"http://localhost:8080"`
-	WAPublisherUsername   string `env:"WA_PUBLISHER_USERNAME,required" envDefault:"admin"`
-	WAPublisherPassword   string `env:"WA_PUBLISHER_PASSWORD,required" envDefault:"admin"`
+	WAPublisherApiBaseUrl string `env:"WA_PUBLISHER_API_BASE_URL,required"`
+	WAPublisherUsername   string `env:"WA_PUBLISHER_USERNAME,required"`
+	WAPublisherPassword   string `env:"WA_PUBLISHER_PASSWORD,required"`
 
 	WebClientPublicDir string `env:"WEB_CLIENT_PUBLIC_DIR,required" envDefault:"web"`
 }
