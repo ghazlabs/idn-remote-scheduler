@@ -75,6 +75,59 @@
       </div>
     </div>
 
+    <!-- Whatsapp Login Modal -->
+    <div
+      id="loginWhatsappModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    >
+      <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
+        <button
+          class="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          onclick="hideLoginWhatsappModal()"
+        >
+          &times;
+        </button>
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Login Whatsapp</h2>
+        <div class="flex space-x-6">
+          <div class="w-1/2 relative">
+            <img
+              id="qrCodeImage"
+              src=""
+              alt="qrCodeLogin"
+              class="w-full h-auto rounded-md hidden"
+            />
+            <div
+              id="qrCodeSpinner"
+              class="absolute inset-0 flex items-center justify-center"
+            >
+              <div class="w-6 h-6 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </div>
+          <div class="w-1/2 flex flex-col justify-between">
+            <div>
+              <h3 class="text-lg font-medium text-gray-700">Please scan to connect</h3>
+              <p class="text-sm text-gray-600 mt-2">
+                Open <strong>Setting &gt; Linked Devices &gt; Link Device</strong>
+              </p>
+            </div>
+            <div class="pt-6 text-xs text-gray-500 italic">
+              Refresh QR Code in 30 seconds to avoid link expiration
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end">
+          <button
+            id="refreshQrCodeBtn"
+            class="flex items-center bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled
+          >
+            <i data-feather="refresh-cw" class="h-4 w-4 mr-1"></i>
+            Refresh QR Code
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Main Dashboard -->
     <div id="dashboard" class="hidden">
       <!-- Session Expired Alert -->
@@ -243,7 +296,7 @@
         </div>
       </main>
     </div>
-
+  
     <!-- Message Detail Modal -->
     <div
       id="messageDetailModal"
@@ -341,6 +394,11 @@
     </div>
 
     <script>
+      const QR_CODE_EXPIRATION_TIME = 30000; // 30 seconds
+      const POLLING_TIME = 5000; // 5 seconds
+      const IMMEDIATE_RETRY_TYPE = "immmediate";
+      const SCHEDULED_RETRY_TYPE = "scheduled";
+
       // Initialize icons
       document.addEventListener("DOMContentLoaded", () => {
         feather.replace();
@@ -353,9 +411,7 @@
                           ? JSON.parse(localStorage.getItem("web_client_default_numbers"))
                           : null,
       };
-      const IMMEDIATE_RETRY_TYPE = "immmediate";
-      const SCHEDULED_RETRY_TYPE = "scheduled";
-
+      
       let choices;
       let retryType = IMMEDIATE_RETRY_TYPE;
 
@@ -435,6 +491,38 @@
         }
       }
 
+      async function getQrCode(username, password) {
+        try {
+          const response = await fetch("/whatsapp/login", {
+            method: "GET",
+            headers: {
+              Authorization: `Basic ${auth.token}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error("Authentication failed");
+          }
+
+          const data = await response.json();
+
+          if (data.ok) {
+            if (data.data.session) {
+              hideLoginWhatsappModal();
+            } else {
+              loadLoginQrCode(data.data.qr_link);
+              
+              setTimeout(() => {
+                pollWhatsappSession();
+              }, POLLING_TIME);
+            }
+          }
+        } catch (error) {
+          console.error("Auth check error:", error);
+        }
+      }
+
       async function getAllMessages() {
         try {
           const response = await fetch("/messages", {
@@ -460,6 +548,45 @@
           console.error("Get messages error:", error);
           return [];
         }
+      }
+
+      async function checkWhatsappSession() {
+        try {
+          const response = await fetch("/whatsapp/session", {
+            method: "GET",
+            headers: {
+              Authorization: `Basic ${auth.token}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          return data?.data?.session;
+        } catch (err) {
+          console.error("Failed to check WhatsApp session:", err);
+          return null;
+        }
+      }
+
+      function pollWhatsappSession() {
+        checkWhatsappSession()
+          .then((session) => {
+            if (session) {
+              showDashboard();
+              hideLoginWhatsappModal();
+            } else {
+              setTimeout(pollWhatsappSession, POLLING_TIME);
+            }
+          })
+          .catch((error) => {
+            console.error("Polling error:", error);
+            showLoginWhatsappModal();
+            setTimeout(pollWhatsappSession, POLLING_TIME);
+          });
       }
 
       async function scheduleMessage(
@@ -532,24 +659,128 @@
         if (!auth.token) {
           showLoginModal();
         } else {
-          showDashboard();
+          checkWhatsappSession()
+            .then(whatsappSession => {
+              if (whatsappSession) {
+                showDashboard();
+              } else {
+                showLoginWhatsappModal();
+              }
+            })
+            .catch(error => {
+              console.error("Error initializing page:", error);
+
+              showLoginWhatsappModal();
+            });
         }
       }
 
+      function showConnected() {
+        document
+            .getElementById("sessionExpiredAlert")
+            .classList.add("hidden");
+          document.getElementById("connectionStatus").textContent = "Connected";
+          document
+            .getElementById("connectionStatus")
+            .parentElement.classList.remove("bg-red-100", "text-red-800");
+          document
+            .getElementById("connectionStatus")
+            .parentElement.classList.add("bg-green-100", "text-green-800");
+      }
+
+      function showDisconnected() {
+        document
+            .getElementById("sessionExpiredAlert")
+            .classList.remove("hidden");
+          document.getElementById("connectionStatus").textContent =
+            "Disconnected";
+          document
+            .getElementById("connectionStatus")
+            .parentElement.classList.remove("bg-green-100", "text-green-800");
+          document
+            .getElementById("connectionStatus")
+            .parentElement.classList.add("bg-red-100", "text-red-800");
+      }
+
       function showLoginModal() {
-        document.getElementById("loginModal").classList.remove("hidden");
         document.getElementById("loginModal").classList.add("flex");
-        document.getElementById("dashboard").classList.add("hidden");
+        document.getElementById("loginModal").classList.remove("hidden");
+      }
+
+      function hideLoginModal() {
+        document.getElementById("loginModal").classList.add("hidden");
+        document.getElementById("loginModal").classList.remove("flex");
+      }
+
+      function showLoginWhatsappModal() {
+        document.getElementById("loginWhatsappModal").classList.remove("hidden");
+        document.getElementById("loginWhatsappModal").classList.add("flex");
+
+        const qrCodeImageElement = document.getElementById("qrCodeImage");
+        const qrCodeSpinner = document.getElementById("qrCodeSpinner");
+
+        qrCodeSpinner.classList.remove("hidden");
+        qrCodeSpinner.classList.add("flex");
+        qrCodeImageElement.classList.add("hidden");
+
+        getQrCode();
+      }
+
+      function hideLoginWhatsappModal() {
+        document.getElementById("loginWhatsappModal").classList.add("hidden");
+        document.getElementById("loginWhatsappModal").classList.remove("flex");
+
+        const qrCodeImageElement = document.getElementById("qrCodeImage");
+        const qrCodeSpinner = document.getElementById("qrCodeSpinner");
+
+        qrCodeSpinner.classList.add("hidden");
+        qrCodeSpinner.classList.remove("flex");
+        qrCodeImageElement.classList.add("hidden");
+        qrCodeImageElement.classList.remove("flex");
+
+        qrCodeImageElement.src = "";
+      }
+
+      function loadLoginQrCode(qrLink) {
+        if (!qrLink) {
+          return;
+        }
+
+        const qrCodeImageElement = document.getElementById("qrCodeImage");
+        const qrCodeSpinner = document.getElementById("qrCodeSpinner");
+
+        qrCodeImageElement.src = qrLink;
+
+        qrCodeImageElement.onload = () => {
+          qrCodeSpinner.classList.add("hidden");
+          qrCodeSpinner.classList.remove("flex");
+
+          qrCodeImageElement.classList.remove("hidden");
+
+          setTimeout(enableRefreshQrButton, QR_CODE_EXPIRATION_TIME);
+        };
+      }
+
+      function enableRefreshQrButton() {
+        const btn = document.getElementById("refreshQrCodeBtn");
+        btn.disabled = false;
+      }
+
+      function disableRefreshQrButton() {
+        const btn = document.getElementById("refreshQrCodeBtn");
+        btn.disabled = true;
       }
 
       function showDashboard() {
-        document.getElementById("loginModal").classList.add("hidden");
-        document.getElementById("loginModal").classList.remove("flex");
         document.getElementById("dashboard").classList.remove("hidden");
 
         initRecipientsSelect();
         
         loadMessages();
+      }
+
+      function hideDashboard() {
+        document.getElementById("dashboard").classList.add("hidden");
       }
 
       function showMessageDetailModal(message) {
@@ -781,28 +1012,9 @@
 
         // Check for session expired messages
         if (checkForSessionExpired(messages)) {
-          document
-            .getElementById("sessionExpiredAlert")
-            .classList.remove("hidden");
-          document.getElementById("connectionStatus").textContent =
-            "Disconnected";
-          document
-            .getElementById("connectionStatus")
-            .parentElement.classList.remove("bg-green-100", "text-green-800");
-          document
-            .getElementById("connectionStatus")
-            .parentElement.classList.add("bg-red-100", "text-red-800");
+          showDisconnected();
         } else {
-          document
-            .getElementById("sessionExpiredAlert")
-            .classList.add("hidden");
-          document.getElementById("connectionStatus").textContent = "Connected";
-          document
-            .getElementById("connectionStatus")
-            .parentElement.classList.remove("bg-red-100", "text-red-800");
-          document
-            .getElementById("connectionStatus")
-            .parentElement.classList.add("bg-green-100", "text-green-800");
+          showConnected();
         }
       }
 
@@ -841,6 +1053,10 @@
 
       // Initialize recipients multi-select
       function initRecipientsSelect() {
+        if (choices) {
+          return;
+        }
+
         const recipientsSelect = document.getElementById("recipients");
         choices = new Choices(recipientsSelect, {
           removeItemButton: true,
@@ -891,14 +1107,27 @@
 
             const isAuthenticated = await checkAuth(username, password);
             if (isAuthenticated) {
+              const username = document.getElementById("username").value = "";
+              const password = document.getElementById("password").value = "";
+
               // Hide login error if shown
               document.getElementById("loginError").classList.add("hidden");
 
-              // Show dashboard
-              showDashboard();
+              hideLoginModal();
 
-              // // Initialize recipients select
-              // initRecipientsSelect();
+              checkWhatsappSession()
+                .then((session) => {
+                  if (session) {
+                    showDashboard();
+                    hideLoginWhatsappModal();
+                  } else {
+                    showLoginWhatsappModal();
+                  }
+                })
+                .catch((error) => {
+                  console.error("Polling error:", error);
+                  showLoginWhatsappModal();
+                });
             } else {
               document.getElementById("loginError").classList.remove("hidden");
             }
@@ -910,7 +1139,22 @@
           localStorage.setItem("web_client_default_numbers", [])
           auth.token = null;
           auth.defaultNumbers = [];
+          hideDashboard();
           showLoginModal();
+        });
+
+        // Refresh QR button
+        document.getElementById("refreshQrCodeBtn").addEventListener("click", () => {
+          getQrCode();
+
+          const qrCodeImageElement = document.getElementById("qrCodeImage");
+          const qrCodeSpinner = document.getElementById("qrCodeSpinner");
+
+          qrCodeSpinner.classList.remove("hidden");
+          qrCodeSpinner.classList.add("flex");
+          qrCodeImageElement.classList.add("hidden");
+          
+          disableRefreshQrButton();
         });
 
         // Refresh button
