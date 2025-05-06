@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/caarlos0/env/v11"
-	"github.com/ghazlabs/idn-remote-scheduler/internal/core"
-	wa "github.com/ghazlabs/idn-remote-scheduler/internal/driven/publisher"
-	"github.com/ghazlabs/idn-remote-scheduler/internal/driven/scheduler"
-	mysql "github.com/ghazlabs/idn-remote-scheduler/internal/driven/storage"
-	"github.com/ghazlabs/idn-remote-scheduler/internal/driver"
+	"github.com/ghazlabs/wa-scheduler/internal/core"
+	wa "github.com/ghazlabs/wa-scheduler/internal/driven/publisher"
+	"github.com/ghazlabs/wa-scheduler/internal/driven/scheduler"
+	mysql "github.com/ghazlabs/wa-scheduler/internal/driven/storage"
+	"github.com/ghazlabs/wa-scheduler/internal/driver"
 	"github.com/go-co-op/gocron/v2"
 	"github.com/go-resty/resty/v2"
 

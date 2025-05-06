@@ -21,7 +21,7 @@ jobs:
           chmod 600 private_key.pem
 
           ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.SSH_USERNAME_PROD }}@${{ secrets.SSH_HOST_PROD }} <<EOF
-            cd ~/go/src/github.com/ghazlabs/idn-remote-scheduler
+            cd ~/go/src/github.com/ghazlabs/wa-scheduler
             git checkout main
             git pull
             make deploy-ec2-wa-scheduler
