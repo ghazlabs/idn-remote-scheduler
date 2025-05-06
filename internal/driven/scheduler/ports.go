@@ -3,7 +3,7 @@ package scheduler
 import (
 	"context"
 
-	"github.com/ghazlabs/idn-remote-scheduler/internal/core"
+	"github.com/ghazlabs/wa-scheduler/internal/core"
 )
 
 type Publisher interface {

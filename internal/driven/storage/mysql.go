@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ghazlabs/idn-remote-scheduler/internal/core"
+	"github.com/ghazlabs/wa-scheduler/internal/core"
 	"gopkg.in/validator.v2"
 )
 
