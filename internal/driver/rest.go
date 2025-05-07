@@ -21,10 +21,10 @@ type API struct {
 
 type APIConfig struct {
 	Service            core.Service `validate:"nonnil"`
-	DefaultNumbers     []string     `validate:"nonzero"`
 	ClientUsername     string       `validate:"nonzero"`
 	ClientPassword     string       `validate:"nonzero"`
 	WebClientPublicDir string       `validate:"nonzero"`
+	DefaultNumbers     []string
 }
 
 func NewAPI(cfg APIConfig) (*API, error) {

@@ -13,6 +13,16 @@ A simple message scheduling tool for WhatsApp private chats or groups. Built to 
 
 In our group, important messages often vanished into the noise — sent at odd hours, buried under a flood of chats, and seen too late (or not at all). We built this tool to change that. With manual scheduling, you control exactly when your message hits.
 
+## Architecture
+
+![High Level Architecture](./docs/architecture.drawio.svg)
+
+Available services:
+
+- `Server and Dashboard Service` => Handling dashboard and api requests from clients. For the API details see [this doc](./docs/rest_api.md).
+- `WhatsApp Publisher` => Whatsapp publisher service. This service is responsible for sending messages to WhatsApp. Right now it only support using [go-whatsapp-web-multidevice](https://github.com/aldinokemal/go-whatsapp-web-multidevice).
+- `Storage` => This service is responsible for storing all the message state. The database schema is available [here](./docs/db/schema.sql). Currently, it only supports MySQL.
+
 ## Features
 
 - Schedule messages for private chats or groups
@@ -35,10 +45,25 @@ In our group, important messages often vanished into the noise — sent at odd h
 3. Log in with username `admin` and password `admin`
 4. Scan the QR code to connect your WhatsApp account
 5. When the dashboard shows, you already can schedule message
+6. To get group recipients id, you need to check `List Groups` from the WhatsApp Publisher service on <http://localhost:3000>.
 
 ### Production
 
 TBD
+
+## Environment Variables
+
+| Variable Name               | Required | Default | Description                                                                                                                                      |
+| --------------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `LISTEN_PORT`               | Yes      | `9865`  | Port number the server listens on                                                                                                                |
+| `MYSQL_DSN`                 | Yes      | –       | MySQL Data Source Name                                                                                                                           |
+| `DASHBOARD_CLIENT_USERNAME` | Yes      | –       | Username for dashboard authentication                                                                                                            |
+| `DASHBOARD_CLIENT_PASSWORD` | Yes      | –       | Password for dashboard authentication                                                                                                            |
+| `WA_DEFAULT_NUMBERS`        | No       | –       | Comma-separated list of default numbers could be private numbers or group id WhatsApp. E.g. `6287822334455@s.whatsapp.net,120363020892687898@g.us` |
+| `WA_PUBLISHER_API_BASE_URL` | Yes      | –       | Base URL for WA Publisher API                                                                                                                    |
+| `WA_PUBLISHER_USERNAME`     | Yes      | –       | Username for WA Publisher API                                                                                                                    |
+| `WA_PUBLISHER_PASSWORD`     | Yes      | –       | Password for WA Publisher API                                                                                                                    |
+| `WEB_CLIENT_PUBLIC_DIR`     | Yes      | `web`   | Directory for serving the web client                                                                                                             |
 
 ## Contributing
 

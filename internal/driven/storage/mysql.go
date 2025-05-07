@@ -89,13 +89,13 @@ func (s *MySQLStorage) GetAllMessages(ctx context.Context, input core.GetAllMess
 
 		msg.RecipientNumbers = strings.Split(recipientNumbers, ",")
 
-		t, err := time.Parse("2006-01-02 15:04:05", createdAt)
+		t, err := time.Parse(time.RFC3339, createdAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse created_at timestamp: %w", err)
 		}
 		msg.CreatedAt = t.Unix()
 
-		t, err = time.Parse("2006-01-02 15:04:05", updatedAt)
+		t, err = time.Parse(time.RFC3339, updatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse updated_at timestamp: %w", err)
 		}
