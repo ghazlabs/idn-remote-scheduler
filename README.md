@@ -10,9 +10,11 @@ A simple message scheduling tool for WhatsApp private chats or groups. Built to 
 </p>
 
 ## Why We Built This
+
 In our group, important messages often vanished into the noise — sent at odd hours, buried under a flood of chats, and seen too late (or not at all). We built this tool to change that. With manual scheduling, you control exactly when your message hits.
 
 ## Features
+
 - Schedule messages for private chats or groups
 - Set exact send times
 - Retry send
@@ -34,15 +36,19 @@ In our group, important messages often vanished into the noise — sent at odd h
 4. Scan the QR code to connect your WhatsApp account
 5. When the dashboard shows, you already can schedule message
 
+### Production
+
+TBD
+
 ## Contributing
 
 First and foremost, thank you for your interest in contributing to WA Scheduler 🙏
 
 There are many ways to contribute, and most of them don't require writing code.
 
-* [Spread the word](#spread-the-word)
-* [Engage with the community](#engage-with-the-community)
-* [Contribute code](#contribute-code)
+- [Spread the word](#spread-the-word)
+- [Engage with the community](#engage-with-the-community)
+- [Contribute code](#contribute-code)
 
 ### Spread the word
 
@@ -60,13 +66,15 @@ Code is just one piece of the puzzle—and contributing doesn’t always mean wr
 >
 > Code matters, but it’s just one part of what makes a great product. Sometimes the easiest code fix isn’t the best choice overall. Don’t forget—there are plenty of other ways to contribute too!
 
-#### Quick steps to contribute:
+#### Quick steps to contribute
 
 1. Fork the repo via the ["Fork"](https://github.com/ghazlabs/wa-scheduler/fork) button
 2. Clone your fork locally
 3. Create a branch
+
     ```bash
     git checkout -b your-feature-name
     ```
+
 4. Make your changes
-6. Open a pull request
+5. Open a pull request
