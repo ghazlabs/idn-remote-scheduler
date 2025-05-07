@@ -87,7 +87,7 @@ func (n *WaPublisher) GetLoginQrCode(ctx context.Context) (*core.QrCodeLogin, er
 	}, nil
 }
 
-func (n *WaPublisher) GetWaSession(ctx context.Context) (bool, error) {
+func (n *WaPublisher) GetSession(ctx context.Context) (bool, error) {
 	var rsp RespGetSession
 
 	resp, err := n.HttpClient.R().

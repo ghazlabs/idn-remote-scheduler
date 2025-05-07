@@ -77,7 +77,7 @@ func (a *API) serveLoginWa(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := NewSuccessResp(LoginWaRespCheck{
+	resp := NewSuccessResp(RespLoginWa{
 		Session:    qrCode.Session,
 		QrLink:     qrCode.QrLink,
 		QrDuration: qrCode.QrDuration,
@@ -86,13 +86,13 @@ func (a *API) serveLoginWa(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) serveGetWaSession(w http.ResponseWriter, r *http.Request) {
-	session, err := a.Service.GetWaSession(r.Context())
+	session, err := a.Service.GetSession(r.Context())
 	if err != nil {
 		render.Render(w, r, NewErrorResp(err))
 		return
 	}
 
-	resp := NewSuccessResp(SessionWaRespCheck{
+	resp := NewSuccessResp(RespSessionWa{
 		Session: session,
 	})
 	render.Render(w, r, resp)

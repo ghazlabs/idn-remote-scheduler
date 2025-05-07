@@ -14,7 +14,7 @@ type Service interface {
 	SendMessage(ctx context.Context, inputMsg ScheduleMessageInput) error
 	RetryMessage(ctx context.Context, input RetryMessageInput) error
 	GetLoginQrCode(ctx context.Context) (*QrCodeLogin, error)
-	GetWaSession(ctx context.Context) (bool, error)
+	GetSession(ctx context.Context) (bool, error)
 }
 
 type ServiceConfig struct {
@@ -59,16 +59,16 @@ func (s *service) InitializeService(ctx context.Context) {
 func (s *service) GetLoginQrCode(ctx context.Context) (*QrCodeLogin, error) {
 	qrCode, err := s.Publisher.GetLoginQrCode(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve messages: %w", err)
+		return nil, fmt.Errorf("failed to retrieve login qr code: %w", err)
 	}
 
 	return qrCode, nil
 }
 
-func (s *service) GetWaSession(ctx context.Context) (bool, error) {
-	session, err := s.Publisher.GetWaSession(ctx)
+func (s *service) GetSession(ctx context.Context) (bool, error) {
+	session, err := s.Publisher.GetSession(ctx)
 	if err != nil {
-		return false, fmt.Errorf("failed to retrieve messages: %w", err)
+		return false, fmt.Errorf("failed to session: %w", err)
 	}
 
 	return session, nil

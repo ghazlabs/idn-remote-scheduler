@@ -18,5 +18,5 @@ type Scheduler interface {
 
 type Publisher interface {
 	GetLoginQrCode(ctx context.Context) (*QrCodeLogin, error)
-	GetWaSession(ctx context.Context) (bool, error)
+	GetSession(ctx context.Context) (bool, error)
 }
