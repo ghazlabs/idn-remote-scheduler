@@ -80,7 +80,7 @@ func main() {
 
 	api, err := driver.NewAPI(driver.APIConfig{
 		Service:            service,
-		DefaultNumbers:     cfg.DefaultNumbers,
+		DefaultNumbers:     cfg.WADefaultNumbers,
 		ClientUsername:     cfg.ClientUsername,
 		ClientPassword:     cfg.ClientPassword,
 		WebClientPublicDir: cfg.WebClientPublicDir,
@@ -109,13 +109,13 @@ type config struct {
 
 	MysqlDSN string `env:"MYSQL_DSN,required"`
 
-	ClientUsername string   `env:"CLIENT_USERNAME,required"`
-	ClientPassword string   `env:"CLIENT_PASSWORD,required"`
-	DefaultNumbers []string `env:"DEFAULT_NUMBERS"`
+	ClientUsername string `env:"DASHBOARD_CLIENT_USERNAME,required"`
+	ClientPassword string `env:"DASHBOARD_CLIENT_PASSWORD,required"`
 
-	WAPublisherApiBaseUrl string `env:"WA_PUBLISHER_API_BASE_URL,required"`
-	WAPublisherUsername   string `env:"WA_PUBLISHER_USERNAME,required"`
-	WAPublisherPassword   string `env:"WA_PUBLISHER_PASSWORD,required"`
+	WADefaultNumbers      []string `env:"WA_DEFAULT_NUMBERS"`
+	WAPublisherApiBaseUrl string   `env:"WA_PUBLISHER_API_BASE_URL,required"`
+	WAPublisherUsername   string   `env:"WA_PUBLISHER_USERNAME,required"`
+	WAPublisherPassword   string   `env:"WA_PUBLISHER_PASSWORD,required"`
 
 	WebClientPublicDir string `env:"WEB_CLIENT_PUBLIC_DIR,required" envDefault:"web"`
 }
