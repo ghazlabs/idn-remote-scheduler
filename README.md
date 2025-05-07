@@ -44,7 +44,7 @@ TBD
 
 First and foremost, thank you for your interest in contributing to WA Scheduler 🙏
 
-There are many ways to contribute, and most of them don't require writing code.
+There are many ways to contribute, and most of them dont require writing code.
 
 - [Spread the word](#spread-the-word)
 - [Engage with the community](#engage-with-the-community)
