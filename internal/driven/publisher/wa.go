@@ -133,7 +133,7 @@ func (n *WaPublisher) sendMessage(ctx context.Context, recID string, content str
 			return core.ErrSessionExpired
 		}
 
-		return fmt.Errorf("failed to send notification: %s", resp.String())
+		return fmt.Errorf("failed to send message: %s", resp.String())
 	}
 
 	return nil
