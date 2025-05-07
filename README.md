@@ -17,48 +17,56 @@ In our group, important messages often vanished into the noise — sent at odd h
 - Set exact send times
 - Retry send
 
-## Installation
+## Getting Started
 
-### Prerequisites
-- Docker
-- Docker Compose
-- WhatsApp account
+### Locally (Docker)
 
-### Quick Start
+1. Run the following commands:
 
-1. Run this
+    ```bash
+    git clone https://github.com/ghazlabs/wa-scheduler.git
 
-```bash
-git clone https://github.com/ghazlabs/wa-scheduler.git
+    make run
+    ```
 
-make run
-  ```
-
-2. Open http://localhost:9865 to access the dashboard
-3. Login with username `admin` and password `admin`
+2. Open <http://localhost:9865> to access the dashboard
+3. Log in with username `admin` and password `admin`
 4. Scan the QR code to connect your WhatsApp account
 5. When the dashboard shows, you already can schedule message
 
 ## Contributing
-<a name="contributing"></a>
 
-Thank you for considering contributing to WA Scheduler!
+First and foremost, thank you for your interest in contributing to WA Scheduler 🙏
 
-Whether you’re fixing bugs, improving documentation, or building new features, **your help makes this project better**.
+There are many ways to contribute, and most of them don't require writing code.
 
-You can also solve our [issues](https://github.com/ghazlabs/wa-scheduler/issues) by code or simply join the discussion to start contribute.
+* [Spread the word](#spread-the-word)
+* [Engage with the community](#engage-with-the-community)
+* [Contribute code](#contribute-code)
 
-### Getting Started
-1. The first step is to fork and clone this repository. You can perform these steps manually by clicking the ["Fork"](https://github.com/ghazlabs/wa-scheduler/fork) button on the GitHub repository page, or by using [Github CLI](https://cli.github.com/)
+### Spread the word
+
+This might be the biggest help of all. Share WA Scheduler with your network or anyone who needs a simple way to schedule WhatsApp messages.
+
+### Engage with the community
+
+Every message, reaction, or bit of feedback counts. It keeps us motivated and reminds us that real people find this project useful.
+
+### Contribute code
+
+Code is just one piece of the puzzle—and contributing doesn’t always mean writing code. But if you do want to dive in, start small! Fix typos, report or squash bugs from the [issues page](https://github.com/ghazlabs/wa-scheduler/issues), polish up the docs, or add helpful features.
+
+> [!TIP]
+>
+> Code matters, but it’s just one part of what makes a great product. Sometimes the easiest code fix isn’t the best choice overall. Don’t forget—there are plenty of other ways to contribute too!
+
+#### Quick steps to contribute:
+
+1. Fork the repo via the ["Fork"](https://github.com/ghazlabs/wa-scheduler/fork) button
 2. Clone your fork locally
 3. Create a branch
-```bash
-git checkout -b your-feature-name
-```
+    ```bash
+    git checkout -b your-feature-name
+    ```
 4. Make your changes
-5. Commit and push
-```bash
-git commit -m "Add: your message"
-git push origin your-feature-name
-```
 6. Open a pull request
