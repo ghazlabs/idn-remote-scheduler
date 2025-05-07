@@ -90,7 +90,7 @@
             <i data-feather="x"></i>
           </button>
         </div>
-      </div>
+      </div>    
 
       <!-- Header -->
       <header class="bg-white shadow">
@@ -393,6 +393,11 @@
           minDate: "today",
           defaultHour: new Date().getHours(),
           defaultMinute: new Date().getMinutes(),
+          onOpen: function(selectedDates, dateStr, instance) {
+            const now = new Date();
+
+            instance.setDate(now, true);
+          }
         });
 
         document.getElementById(elementId).value = "";
@@ -838,7 +843,7 @@
 
         feather.replace();
       };
-
+      
       // Initialize recipients multi-select
       function initRecipientsSelect() {
         const recipientsSelect = document.getElementById("recipients");
@@ -896,9 +901,6 @@
 
               // Show dashboard
               showDashboard();
-
-              // // Initialize recipients select
-              // initRecipientsSelect();
             } else {
               document.getElementById("loginError").classList.remove("hidden");
             }
