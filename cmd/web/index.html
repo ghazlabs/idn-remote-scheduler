@@ -456,6 +456,11 @@
           minDate: "today",
           defaultHour: new Date().getHours(),
           defaultMinute: new Date().getMinutes(),
+          onOpen: function (selectedDates, dateStr, instance) {
+            const now = new Date();
+
+            instance.setDate(now, true);
+          },
         });
 
         document.getElementById(elementId).value = "";
