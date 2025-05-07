@@ -14,9 +14,9 @@
     />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
     <!-- Multi-select input -->
-    <script src=" https://cdn.jsdelivr.net/npm/choices.js@11.1.0/public/assets/scripts/choices.min.js "></script>
+    <script src="https://cdn.jsdelivr.net/npm/choices.js@11.1.0/public/assets/scripts/choices.min.js"></script>
     <link
-      href=" https://cdn.jsdelivr.net/npm/choices.js@11.1.0/public/assets/styles/choices.min.css "
+      href="https://cdn.jsdelivr.net/npm/choices.js@11.1.0/public/assets/styles/choices.min.css"
       rel="stylesheet"
     />
   </head>
@@ -53,6 +53,7 @@
               type="text"
               id="username"
               name="username"
+              autocomplete="username"
               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
@@ -66,6 +67,7 @@
               type="password"
               id="password"
               name="password"
+              autocomplete="current-password"
               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
@@ -189,10 +191,9 @@
                 id="recipients"
                 name="recipients"
                 multiple
-                class="w-full"
               ></select>
               <p class="mt-1 text-xs text-gray-500">
-                You can select from default numbers or enter custom numbers
+                Type phone number, group id or select the recipients
               </p>
             </div>
             <div>
@@ -410,6 +411,16 @@
       document.addEventListener("DOMContentLoaded", () => {
         feather.replace();
       });
+
+      // Format WhatsApp phone number
+      function formatWhatsappNumber(phoneNumber) {
+        // If the number already contains @, it's already formatted
+        if (phoneNumber.includes("@")) {
+          return phoneNumber;
+        }
+        // Otherwise append @s.whatsapp.net for individual contacts
+        return `${phoneNumber}@s.whatsapp.net`;
+      }
 
       // Mock Functions - Replace with actual API calls
       const auth = {
@@ -1098,10 +1109,13 @@
 
         const recipientsSelect = document.getElementById("recipients");
         choices = new Choices(recipientsSelect, {
+          classNames: {
+            containerOuter: ["choices", "w-full", "mb-0"],
+          },
           removeItemButton: true,
           allowHTML: false,
           placeholder: true,
-          placeholderValue: "Enter or select recipients",
+          placeholderValue: "e.g. 6281234567890 or 120363020892687891@g.us",
           addItems: true,
           addChoices: true,
         });
@@ -1218,7 +1232,7 @@
             const recipientSelect = document.getElementById("recipients");
             const recipientNumbers = Array.from(
               recipientSelect.selectedOptions
-            ).map((option) => option.value);
+            ).map((option) => formatWhatsappNumber(option.value));
 
             const content = document.getElementById("messageContent").value;
 
