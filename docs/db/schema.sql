@@ -1,4 +1,4 @@
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
     id VARCHAR(36) PRIMARY KEY,
     content TEXT NOT NULL,
     recipient_numbers TEXT NOT NULL,
