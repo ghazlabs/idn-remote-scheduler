@@ -18,7 +18,6 @@ services:
 
   whatsapp:
     image: aldinokemal2104/go-whatsapp-web-multidevice:v4.22.1
-    container_name: whatsapp
     restart: always
     ports:
       - "3000:3000"
@@ -47,7 +46,7 @@ services:
       - MYSQL_DSN=root:test1234@tcp(mysql:3306)/idnremotescheduler?timeout=5s
       - CLIENT_USERNAME=admin
       - CLIENT_PASSWORD=admin
-      - DEFAULT_NUMBERS=120363026176938692@g.us
+      - DEFAULT_NUMBERS=${WA_SCHEDULER_DEFAULT_NUMBERS}
       - WA_PUBLISHER_API_BASE_URL=http://whatsapp:3000
       - WA_PUBLISHER_USERNAME=admin
       - WA_PUBLISHER_PASSWORD=admin

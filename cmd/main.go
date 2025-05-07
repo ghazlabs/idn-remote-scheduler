@@ -111,7 +111,7 @@ type config struct {
 
 	ClientUsername string   `env:"CLIENT_USERNAME,required"`
 	ClientPassword string   `env:"CLIENT_PASSWORD,required"`
-	DefaultNumbers []string `env:"DEFAULT_NUMBERS,required"`
+	DefaultNumbers []string `env:"DEFAULT_NUMBERS"`
 
 	WAPublisherApiBaseUrl string `env:"WA_PUBLISHER_API_BASE_URL,required"`
 	WAPublisherUsername   string `env:"WA_PUBLISHER_USERNAME,required"`
