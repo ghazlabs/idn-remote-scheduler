@@ -1,4 +1,4 @@
-module github.com/ghazlabs/idn-remote-scheduler
+module github.com/ghazlabs/wa-scheduler
 
 go 1.22.2
 

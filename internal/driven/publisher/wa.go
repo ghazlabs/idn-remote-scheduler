@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/ghazlabs/idn-remote-scheduler/internal/core"
+	"github.com/ghazlabs/wa-scheduler/internal/core"
 	"github.com/go-resty/resty/v2"
 	"gopkg.in/validator.v2"
 )
