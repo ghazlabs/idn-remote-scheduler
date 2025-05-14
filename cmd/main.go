@@ -105,7 +105,7 @@ func main() {
 }
 
 type config struct {
-	ListenPort string `env:"LISTEN_PORT,required" envDefault:"9865"`
+	ListenPort string `env:"LISTEN_PORT,required" envDefault:"9866"`
 
 	MysqlDSN string `env:"MYSQL_DSN,required"`
 

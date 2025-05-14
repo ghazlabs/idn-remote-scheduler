@@ -41,7 +41,7 @@ Available services:
     make run
     ```
 
-2. Open <http://localhost:9865> to access the dashboard
+2. Open <http://localhost:9866> to access the dashboard
 3. Log in with username `admin` and password `admin`
 4. Scan the QR code to connect your WhatsApp account
 5. When the dashboard shows, you already can schedule message
@@ -55,7 +55,7 @@ TBD
 
 | Variable Name               | Required | Default | Description                                                                                                                                      |
 | --------------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `LISTEN_PORT`               | Yes      | `9865`  | Port number the server listens on                                                                                                                |
+| `LISTEN_PORT`               | Yes      | `9866`  | Port number the server listens on                                                                                                                |
 | `MYSQL_DSN`                 | Yes      | –       | MySQL Data Source Name                                                                                                                           |
 | `DASHBOARD_CLIENT_USERNAME` | Yes      | –       | Username for dashboard authentication                                                                                                            |
 | `DASHBOARD_CLIENT_PASSWORD` | Yes      | –       | Password for dashboard authentication                                                                                                            |
