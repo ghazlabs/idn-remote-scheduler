@@ -42,7 +42,7 @@ services:
     volumes:
       - ../../../cmd/web:/web
     environment:
-      - LISTEN_PORT=${LISTEN_PORT:-9865}
+      - LISTEN_PORT=${LISTEN_PORT:-9866}
       - MYSQL_DSN=${MYSQL_DSN:-root:test1234@tcp(mysql:3306)/idnremotescheduler?parseTime=true}
       - DASHBOARD_CLIENT_USERNAME=${DASHBOARD_CLIENT_USERNAME:-admin}
       - DASHBOARD_CLIENT_PASSWORD=${DASHBOARD_CLIENT_PASSWORD:-admin}
@@ -51,7 +51,7 @@ services:
       - WA_PUBLISHER_USERNAME=${WA_PUBLISHER_USERNAME:-admin}
       - WA_PUBLISHER_PASSWORD=${WA_PUBLISHER_PASSWORD:-admin}
     ports:
-      - "9865:9865"
+      - "9866:9866"
 
 volumes:
   whatsapp:
